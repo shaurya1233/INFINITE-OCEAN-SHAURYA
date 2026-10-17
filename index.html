@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07151d">
+<meta name="description" content="INFINITE OCEAN — an interactive procedural 3D maritime world by Shaurya Mittal.">
+<title>INFINITE OCEAN — Shaurya Mittal</title>
+<style>
+  :root{--ink:#edf1ed;--muted:#a4b0b1;--dim:#75868b;--line:rgba(222,235,230,.18);--panel:rgba(7,18,24,.78);--panel2:rgba(10,23,30,.94);--gold:#d4b989;--teal:#87b8b2;--safe-bottom:env(safe-area-inset-bottom,0px)}
+  *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07151d;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,a,input{font:inherit}button{color:inherit;cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:3px}button:disabled{opacity:.4;cursor:not-allowed}#app{position:relative;inset:0;width:100%;height:100%;height:100dvh;overflow:hidden;background:#07151d}#stage{position:absolute;inset:0;overflow:hidden}#webgl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}#scene-vignette{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(3,11,17,.48),transparent 32%,transparent 70%,rgba(3,11,17,.08)),linear-gradient(0deg,rgba(3,11,17,.52),transparent 34%,rgba(3,11,17,.18));z-index:1}
+  .loading{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:#07151d;transition:opacity .6s ease,visibility .6s ease}.loading.is-hidden{opacity:0;visibility:hidden;pointer-events:none}.load-card{display:flex;align-items:center;gap:20px;max-width:90%;}.load-mark{width:34px;height:34px;border:1px solid rgba(212,185,137,.3);border-top-color:var(--gold);border-right-color:var(--gold);border-radius:50%;animation:turn 1.1s linear infinite}.load-copy{letter-spacing:.2em;text-transform:uppercase;font-size:10px;color:#d7e0dc;line-height:1.8}.load-copy strong{display:block;font-size:12px;letter-spacing:.26em;font-weight:500}.load-copy span{color:#7f999f;letter-spacing:.13em}@keyframes turn{to{transform:rotate(360deg)}}
+  .error-screen{position:absolute;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:26px;background:#07151d}.error-screen.visible{display:flex}.error-card{max-width:560px;border:1px solid var(--line);padding:28px;background:#0b1a22}.eyebrow{font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold)}.error-card h1{font:400 clamp(25px,4vw,40px)/1.1 Georgia,serif;margin:16px 0}.error-card p{font-size:13px;line-height:1.8;color:#acb9b9}.error-card button{border:1px solid var(--line);background:transparent;padding:12px 16px;margin-top:10px}
+  .topbar{position:absolute;z-index:8;top:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:space-between;padding:26px clamp(18px,4vw,58px);gap:20px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);min-width:190px}.brand-symbol{width:28px;height:28px;display:grid;place-items:center;border:1px solid rgba(212,185,137,.7);border-radius:50%;color:var(--gold);font:12px Georgia,serif;position:relative}.brand-symbol:after{content:"";position:absolute;width:5px;height:5px;background:var(--gold);border-radius:50%;top:-2px;right:1px}.brand-words{display:grid;gap:4px}.brand-words strong{font-size:11px;font-weight:600;letter-spacing:.29em}.brand-words span{font-size:8px;color:#91a0a3;letter-spacing:.17em;text-transform:uppercase}.nav{display:flex;align-items:center;gap:clamp(10px,2.2vw,31px);padding-top:6px}.nav button,.top-actions button{background:none;border:0;font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:#c0cbca;white-space:nowrap;padding:6px 0;transition:color .2s}.nav button:hover,.nav button.active,.top-actions button:hover{color:var(--gold)}.top-actions{display:flex;align-items:center;gap:16px;padding-top:5px}.icon-button{display:inline-flex;align-items:center;gap:8px}.sound-dot{width:5px;height:5px;border-radius:50%;background:#536d73;display:inline-block}.sound-dot.on{background:var(--teal);box-shadow:0 0 9px #87b8b2}
+  .micro-status{position:absolute;z-index:4;top:91px;left:clamp(18px,4vw,58px);display:flex;align-items:center;gap:10px;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:#aec0c0;pointer-events:none}.micro-status .live{width:5px;height:5px;background:var(--teal);border-radius:50%;box-shadow:0 0 10px rgba(135,184,178,.6)}.micro-status .slash{color:#55666b}
+  .intro{position:absolute;z-index:5;left:clamp(22px,8vw,120px);bottom:clamp(80px,13vh,150px);width:min(610px,78vw);transition:opacity .65s ease,transform .65s ease;pointer-events:none}.intro.hidden{opacity:0;transform:translateY(18px);visibility:hidden}.intro>*{pointer-events:auto}.intro-kicker{display:flex;align-items:center;gap:12px;color:var(--gold);font-size:9px;letter-spacing:.24em;text-transform:uppercase}.intro-kicker:before{content:"";width:34px;height:1px;background:var(--gold)}.intro h1{margin:20px 0 16px;font:400 clamp(43px,8.3vw,100px)/.91 Georgia,"Times New Roman",serif;letter-spacing:-.065em;text-transform:uppercase;max-width:670px}.intro h1 span{display:block;color:#bdc9c5;font-style:italic;font-size:.73em;letter-spacing:-.045em;margin-top:8px}.intro p{color:#b5c0bf;max-width:415px;font-size:12px;line-height:1.9;margin:0 0 25px}.intro-actions{display:flex;align-items:center;gap:22px;flex-wrap:wrap}.button-primary{min-height:45px;background:#d5c2a0;color:#10191b;border:1px solid #d5c2a0;padding:0 20px;display:inline-flex;align-items:center;justify-content:center;gap:26px;font-size:9px;letter-spacing:.17em;text-transform:uppercase;transition:background .2s,border-color .2s,transform .2s}.button-primary:hover{background:#e5d6bb;transform:translateY(-1px)}.button-quiet{border:0;background:transparent;padding:12px 0;color:#d7dfdb;display:inline-flex;align-items:center;gap:9px;font-size:9px;letter-spacing:.18em;text-transform:uppercase}.button-quiet .play{width:22px;height:22px;border:1px solid rgba(220,232,226,.55);border-radius:50%;display:grid;place-items:center;font-size:8px}.button-quiet:hover{color:var(--gold)}
+  .bottomline{position:absolute;z-index:4;left:clamp(18px,4vw,58px);right:clamp(18px,4vw,58px);bottom:26px;display:flex;justify-content:space-between;align-items:flex-end;gap:18px;pointer-events:none}.bottom-meta{display:flex;gap:28px;align-items:flex-end}.meta-block{display:grid;gap:5px}.meta-block span{font-size:8px;color:#83989d;letter-spacing:.18em;text-transform:uppercase}.meta-block strong{font-size:10px;letter-spacing:.08em;font-weight:500;color:#d7e0dc}.scale-line{width:90px;height:1px;background:linear-gradient(90deg,var(--gold),rgba(212,185,137,.12));margin-bottom:4px}.bottom-right{display:flex;align-items:center;gap:18px;text-align:right}.quality-readout{font-size:8px;letter-spacing:.16em;color:#a4b5b6;text-transform:uppercase}.quality-readout strong{font-weight:500;color:#dbe2df;display:block;margin-bottom:5px}
+  .hud{position:absolute;z-index:7;inset:0;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .25s}.hud.visible{opacity:1;visibility:visible}.hud-top-left{position:absolute;left:clamp(18px,4vw,58px);top:124px;display:grid;gap:6px}.hud-kicker{font-size:8px;color:var(--gold);letter-spacing:.22em;text-transform:uppercase}.hud-room{font:400 25px Georgia,serif;color:#edf1ed}.hud-note{font-size:9px;color:#a8b8b8;letter-spacing:.08em}.hud-bottom{position:absolute;bottom:23px;left:50%;transform:translateX(-50%);display:flex;gap:20px;align-items:center;white-space:nowrap}.key-hint{font-size:9px;color:#d7e0dc;letter-spacing:.1em}.keycap{display:inline-grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border:1px solid rgba(222,235,230,.32);background:rgba(6,16,21,.4);font-size:9px;margin-right:5px}.hud-interact{display:none;pointer-events:auto;background:rgba(6,17,23,.86);border:1px solid rgba(212,185,137,.6);padding:11px 14px;font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--gold)}.hud-interact.visible{display:block}.crosshair{position:absolute;top:50%;left:50%;width:13px;height:13px;transform:translate(-50%,-50%);display:none;opacity:.5}.crosshair:before,.crosshair:after{content:"";position:absolute;background:#eaf1ea}.crosshair:before{width:1px;height:13px;left:6px}.crosshair:after{height:1px;width:13px;top:6px}.hud.visible .crosshair{display:block}.room-nav{position:absolute;right:clamp(18px,4vw,58px);top:45%;transform:translateY(-50%);display:grid;gap:6px;pointer-events:auto}.room-nav button{background:rgba(5,15,21,.54);border:1px solid rgba(224,235,230,.13);text-align:right;padding:10px 12px;font-size:8px;letter-spacing:.16em;color:#b9c5c2;text-transform:uppercase;backdrop-filter:blur(8px)}.room-nav button:hover,.room-nav button.active{border-color:rgba(212,185,137,.65);color:var(--gold)}
+  .mobile-pad{position:absolute;z-index:9;left:16px;bottom:calc(38px + var(--safe-bottom));display:none;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);gap:5px;pointer-events:auto}.mobile-pad button{border:1px solid rgba(225,238,230,.28);background:rgba(6,18,24,.62);backdrop-filter:blur(8px);border-radius:2px;font-size:14px;touch-action:none;user-select:none}.mobile-pad button:active{background:rgba(212,185,137,.3)}.mobile-pad [data-move="forward"]{grid-column:2;grid-row:1}.mobile-pad [data-move="left"]{grid-column:1;grid-row:2}.mobile-pad [data-move="back"]{grid-column:2;grid-row:2}.mobile-pad [data-move="right"]{grid-column:3;grid-row:2}.touch-look{position:absolute;z-index:2;right:16px;bottom:calc(45px + var(--safe-bottom));font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(235,243,238,.48);pointer-events:none;display:none}
+  .drawer{position:absolute;z-index:20;right:clamp(12px,3vw,42px);top:82px;width:min(365px,calc(100vw - 24px));max-height:calc(100dvh - 110px);overflow:auto;border:1px solid rgba(224,235,230,.16);background:rgba(7,18,24,.94);backdrop-filter:blur(18px);padding:22px;display:none}.drawer.open{display:block;animation:drawIn .2s ease}@keyframes drawIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}.drawer-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:19px}.drawer h2{font:400 27px Georgia,serif;margin:6px 0 0}.close-button{border:1px solid var(--line);background:transparent;width:30px;height:30px;font-size:16px}.setting-group{border-top:1px solid var(--line);padding:17px 0}.setting-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#b4c2c0}.setting-title small{font-size:8px;color:#72888c;letter-spacing:.08em}.choice-row{display:flex;flex-wrap:wrap;gap:6px}.choice-row button{padding:9px 10px;border:1px solid rgba(220,235,229,.16);background:transparent;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#b9c6c3}.choice-row button.active,.choice-row button:hover{border-color:var(--gold);color:var(--gold);background:rgba(212,185,137,.06)}.drawer p{font-size:11px;line-height:1.8;color:#99aead;margin:9px 0 0}.volume-row{display:flex;align-items:center;gap:12px}.volume-row input{width:100%;accent-color:var(--gold)}
+  .info-panel{position:absolute;z-index:22;right:clamp(12px,3vw,42px);bottom:80px;width:min(370px,calc(100vw - 24px));border:1px solid rgba(224,235,230,.18);background:rgba(7,18,24,.94);backdrop-filter:blur(18px);padding:23px;display:none}.info-panel.open{display:block;animation:drawIn .2s ease}.info-panel h3{font:400 27px Georgia,serif;margin:12px 35px 10px 0}.info-panel p{font-size:11px;color:#a8b8b7;line-height:1.9}.info-panel a{color:var(--gold);font-size:10px;text-decoration:none;letter-spacing:.12em;text-transform:uppercase}.info-panel .close-button{position:absolute;top:15px;right:15px}.toast{position:absolute;z-index:40;left:50%;bottom:calc(70px + var(--safe-bottom));transform:translate(-50%,14px);opacity:0;pointer-events:none;transition:all .25s;background:rgba(7,18,24,.94);border:1px solid rgba(212,185,137,.4);padding:10px 15px;color:#e2e9e4;font-size:9px;letter-spacing:.08em;white-space:normal;max-width:calc(100vw - 30px);text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
+  .help-overlay{position:absolute;inset:0;z-index:25;background:rgba(3,11,16,.68);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}.help-overlay.open{display:flex}.help-card{width:min(690px,100%);max-height:90%;overflow:auto;border:1px solid rgba(224,235,230,.19);background:#091820;padding:clamp(22px,4vw,42px);position:relative}.help-card h2{font:400 clamp(28px,5vw,42px) Georgia,serif;margin:12px 0}.help-card>p{font-size:12px;color:#a9b8b6;line-height:1.9;max-width:520px}.help-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:25px}.help-item{border-top:1px solid var(--line);padding-top:12px}.help-item strong{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}.help-item p{font-size:10px;line-height:1.8;color:#9aadae;margin:7px 0 0}.help-card .close-button{position:absolute;top:22px;right:22px}
+  .signature{position:absolute;z-index:3;right:clamp(18px,4vw,58px);top:47%;transform:translateY(-50%);writing-mode:vertical-rl;color:rgba(220,232,226,.48);font-size:8px;letter-spacing:.23em;text-transform:uppercase;pointer-events:none}
+  @media(max-width:900px){.nav{display:none}.topbar{padding-top:20px}.micro-status{top:75px}.intro{bottom:clamp(105px,15vh,145px);width:min(560px,86vw)}.intro h1{font-size:clamp(42px,10.7vw,75px)}.bottom-meta{gap:16px}.meta-block:nth-child(2){display:none}.signature{right:16px}.room-nav{top:auto;bottom:112px;right:12px;transform:none}.room-nav button{padding:8px;font-size:7px}.hud-top-left{top:105px}.top-actions{gap:12px}}
+  @media(max-width:560px){.topbar{padding:17px 16px}.brand{min-width:unset;gap:9px}.brand-symbol{width:25px;height:25px}.brand-words strong{font-size:9px;letter-spacing:.23em}.brand-words span{font-size:7px;letter-spacing:.1em}.top-actions{gap:10px}.top-actions button{font-size:8px;letter-spacing:.1em}.top-actions .desktop-only{display:none}.micro-status{left:17px;top:69px;font-size:7px;gap:7px}.intro{left:21px;bottom:calc(112px + var(--safe-bottom));width:calc(100vw - 42px)}.intro h1{font-size:clamp(43px,13vw,68px);margin:15px 0 13px}.intro p{font-size:11px;max-width:325px;line-height:1.8;margin-bottom:20px}.intro-actions{gap:16px}.button-primary{min-height:43px;padding:0 14px;gap:14px;font-size:8px}.button-quiet{font-size:8px}.bottomline{left:17px;right:17px;bottom:calc(15px + var(--safe-bottom))}.bottom-meta{gap:12px}.meta-block span{font-size:7px}.meta-block strong{font-size:9px}.scale-line{width:35px}.bottom-right{gap:0}.quality-readout{font-size:7px}.hud-top-left{left:17px;top:94px}.hud-room{font-size:22px}.hud-note{max-width:195px;line-height:1.6}.hud-bottom{bottom:calc(17px + var(--safe-bottom));gap:8px}.hud-bottom .keyboard-hints{display:none}.hud-interact{padding:9px 10px;font-size:8px}.mobile-pad{display:grid}.touch-look{display:block}.room-nav{bottom:calc(130px + var(--safe-bottom));right:12px;gap:4px}.room-nav button{font-size:7px;max-width:120px;white-space:normal}.crosshair{opacity:.28}.drawer{top:66px;right:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 78px);padding:17px}.info-panel{right:8px;bottom:calc(80px + var(--safe-bottom));width:calc(100vw - 16px);padding:19px}.signature{display:none}.help-grid{grid-template-columns:1fr}.load-copy{font-size:9px}.load-copy strong{font-size:10px}}
+  @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+  /* Added simulator controls: an additive layer, leaving the original art direction intact. */
+  .drive-launch{color:var(--gold)!important;border:1px solid rgba(212,185,137,.52)!important;padding:7px 10px!important;letter-spacing:.13em!important}
+  .drive-panel{position:absolute;z-index:12;right:clamp(14px,3vw,42px);bottom:clamp(18px,4vh,42px);width:min(390px,calc(100vw - 28px));display:none;padding:16px;background:rgba(5,15,20,.88);border:1px solid rgba(221,232,226,.2);box-shadow:0 18px 60px rgba(0,0,0,.25);backdrop-filter:blur(16px);color:#edf1ed;pointer-events:auto}
+  .drive-panel.visible{display:block}.drive-panel *{box-sizing:border-box}.drive-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid rgba(222,235,230,.14)}.drive-eyebrow{font-size:8px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase}.drive-title{font:400 21px/1.15 Georgia,serif;margin-top:4px}.drive-live{display:flex;align-items:center;gap:6px;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#9cb5b4;white-space:nowrap}.drive-live:before{content:"";width:5px;height:5px;border-radius:50%;background:#8fbdb0;box-shadow:0 0 8px #6ba99b}
+  .drive-telemetry{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;padding:13px 0}.drive-readout{min-width:0;border-right:1px solid rgba(222,235,230,.12);padding-right:8px}.drive-readout:last-child{border:0}.drive-readout span{display:block;font-size:7px;letter-spacing:.16em;color:#90a6a7;text-transform:uppercase}.drive-readout strong{display:block;margin-top:5px;font:400 22px/1 Georgia,serif;color:#eef1eb}.drive-readout small{display:block;margin-top:5px;font-size:7px;letter-spacing:.08em;color:#82989a;text-transform:uppercase}
+  .drive-section-label{display:flex;justify-content:space-between;gap:12px;margin:4px 0 7px;color:#8ea2a4;font-size:7px;letter-spacing:.16em;text-transform:uppercase}.gear-selector{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.drive-panel button{min-height:35px;border:1px solid rgba(222,235,230,.17);background:rgba(224,235,230,.035);color:#d9e3de;font-size:10px;letter-spacing:.07em;transition:background .15s,border-color .15s,color .15s;touch-action:none;user-select:none;-webkit-user-select:none}.drive-panel button:hover,.drive-panel button:focus-visible{border-color:rgba(212,185,137,.65);color:var(--gold)}.drive-panel button.active{background:rgba(212,185,137,.17);border-color:rgba(212,185,137,.76);color:#f1d9ad}.drive-controls{display:grid;grid-template-columns:1fr 1.25fr 1fr 1fr;gap:5px;margin-top:9px}.drive-controls button{min-height:41px;font-size:8px;letter-spacing:.08em;line-height:1.25}.drive-controls [data-drive-hold="throttle"]{background:rgba(135,184,178,.13);border-color:rgba(135,184,178,.55);color:#bce0d6}.drive-controls [data-drive-hold="brake"],.drive-panel [data-drive-action="stop"]{background:rgba(166,85,65,.13);border-color:rgba(198,122,101,.42);color:#e4b0a0}.drive-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}.drive-footer button{flex:1;min-height:32px;font-size:7px;letter-spacing:.11em}.drive-tip{font-size:7px;line-height:1.55;color:#8fa1a2;margin-top:9px;letter-spacing:.03em}.drive-tip strong{color:#c5d1cb;font-weight:500}.sleep-overlay{position:absolute;z-index:16;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(3,9,13,0);opacity:0;visibility:hidden;pointer-events:none;transition:opacity 1.2s ease,background 1.2s ease,visibility 1.2s}.sleep-overlay.visible{opacity:1;visibility:visible;background:rgba(3,9,13,.65);pointer-events:auto}.sleep-card{width:min(420px,100%);text-align:center;padding:27px 28px;border:1px solid rgba(224,235,230,.2);background:rgba(6,17,23,.62);backdrop-filter:blur(12px);transform:translateY(8px);transition:transform 1.1s ease}.sleep-overlay.visible .sleep-card{transform:translateY(0)}.sleep-mark{width:28px;height:28px;margin:0 auto 18px;border:1px solid rgba(212,185,137,.7);border-radius:50%;position:relative}.sleep-mark:before{content:"";position:absolute;width:12px;height:12px;left:7px;top:4px;border-radius:50%;background:var(--gold);box-shadow:5px -2px 0 1px rgba(6,17,23,.98)}.sleep-card .eyebrow{margin-bottom:10px}.sleep-card h2{margin:0 0 10px;font:400 clamp(27px,4vw,38px)/1.1 Georgia,serif}.sleep-card p{max-width:300px;margin:0 auto 18px;font-size:11px;line-height:1.8;color:#b5c3c1}.sleep-card button{min-height:42px;padding:0 18px;background:#d5c2a0;border:1px solid #d5c2a0;color:#10191b;font-size:8px;letter-spacing:.17em;text-transform:uppercase;cursor:pointer}
+  @media(max-width:900px){.drive-launch{display:none!important}.drive-panel{right:12px;bottom:12px}}
+  @media(max-width:560px){.drive-panel{left:10px;right:10px;bottom:calc(10px + var(--safe-bottom));width:auto;padding:11px}.drive-title{font-size:18px}.drive-telemetry{padding:10px 0;gap:5px}.drive-readout strong{font-size:19px}.drive-panel button{min-height:32px}.drive-controls{gap:4px}.drive-controls button{min-height:37px;font-size:7px}.drive-footer{gap:5px}.drive-footer button{font-size:6px;letter-spacing:.07em}.drive-tip{margin-top:6px}.sleep-card{padding:23px 18px}}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="webgl" aria-label="Interactive 3D ocean and vessel. Use the navigation controls to explore."></canvas><div id="scene-vignette"></div></div>
+  <div class="loading" id="loading"><div class="load-card"><div class="load-mark" aria-hidden="true"></div><div class="load-copy"><strong>INFINITE OCEAN</strong><span id="loadStatus">INITIALIZING GRAPHICS ENGINE</span></div></div></div>
+  <div class="error-screen" id="errorScreen"><div class="error-card"><div class="eyebrow">RENDERING UNAVAILABLE</div><h1>The ocean is temporarily out of view.</h1><p id="errorMessage">The graphics engine could not initialize. Check your connection and browser graphics support, then reload the experience.</p><button id="retryButton">RETRY INITIALIZATION ↗</button></div></div>
+  <header class="topbar">
+    <a class="brand" href="#" id="brandHome" aria-label="Infinite Ocean home"><span class="brand-symbol">I</span><span class="brand-words"><strong>INFINITE OCEAN</strong><span>Interactive maritime study</span></span></a>
+    <nav class="nav" aria-label="Experience navigation">
+      <button data-action="cinematic" class="active">The Experience</button><button data-action="orbit">Vessel</button><button data-action="walkExterior">Exterior</button><button data-action="interior">Interior</button><button data-action="about">About</button>
+    </nav>
+    <div class="top-actions"><button class="icon-button" data-action="sound" aria-label="Toggle ocean ambience"><span class="sound-dot" id="soundDot"></span><span id="soundLabel">SOUND OFF</span></button><button class="desktop-only" data-action="reset">RESET</button><button class="desktop-only" data-action="fullscreen">FULLSCREEN ↗</button><button class="desktop-only" data-action="help">HELP</button><button data-action="driveEnter" class="drive-launch">TAKE THE HELM</button><button data-action="settings" aria-label="Open settings">SETTINGS <span aria-hidden="true">＋</span></button></div>
+  </header>
+  <div class="micro-status"><span class="live"></span><span>REAL-TIME ENVIRONMENT</span><span class="slash">/</span><span id="statusMode">CINEMATIC VIEW</span></div>
+  <main class="intro" id="intro">
+    <div class="intro-kicker">A living maritime world <span>—</span> 001</div>
+    <h1>Infinite <span>Ocean.</span></h1>
+    <p>A quiet study of open water, sculpted light and a vessel designed to be explored. Leave the camera behind. Take the helm.</p>
+    <div class="intro-actions"><button class="button-primary" data-action="enter">TAKE THE HELM <span aria-hidden="true">↗</span></button><button class="button-quiet" data-action="watch"><span class="play" aria-hidden="true">▶</span> WATCH THE INTRO</button></div>
+  </main>
+  <div class="signature">A PROCEDURAL 3D MARITIME VISUALIZATION · 2026</div>
+  <div class="bottomline" id="bottomline"><div class="bottom-meta"><div class="meta-block"><span>Environment</span><strong id="bottomEnvironment">Clear day</strong></div><div class="meta-block"><span>Vessel</span><strong>IO / 28.0 M</strong></div><div class="scale-line"></div></div><div class="bottom-right"><div class="quality-readout"><strong id="bottomQuality">MEDIUM QUALITY</strong><span id="fpsReadout">REAL-TIME WEBGL</span></div></div></div>
+  <section class="hud" id="hud" aria-live="polite">
+    <div class="hud-top-left"><div class="hud-kicker" id="hudZone">EXTERIOR WALKTHROUGH</div><div class="hud-room" id="hudRoom">Aft deck</div><div class="hud-note" id="hudHint">Move around the deck, then enter through the aft door.</div></div>
+    <div class="crosshair" aria-hidden="true"></div>
+    <div class="hud-bottom"><div class="keyboard-hints"><span class="keycap">W</span><span class="keycap">A</span><span class="keycap">S</span><span class="keycap">D</span><span class="key-hint">MOVE</span> &nbsp; <span class="keycap">E</span><span class="key-hint">INTERACT</span></div><button class="hud-interact" id="interactButton" data-action="interact">E · INSPECT</button><button class="button-quiet" id="driveTrigger" data-action="driveEnter" style="display:none">TAKE THE HELM ↗</button><button class="button-quiet" data-action="returnDeck" id="returnDeckButton">RETURN TO DECK ↗</button></div>
+    <div class="room-nav" id="roomNav" aria-label="Interior room navigation"><button data-room="bridge">01 / Bridge</button><button data-room="cabin">02 / Private cabin</button><button data-room="dining">03 / Dining salon</button><button data-room="lounge">04 / Main lounge</button></div>
+  </section>
+  <div class="mobile-pad" id="mobilePad" aria-label="Movement control"><button data-move="forward" aria-label="Move forward">↑</button><button data-move="left" aria-label="Move left">←</button><button data-move="back" aria-label="Move backward">↓</button><button data-move="right" aria-label="Move right">→</button></div><div class="touch-look" id="touchLook">Drag to look</div>
+  <aside class="drawer" id="settingsDrawer" aria-label="Environment settings" aria-hidden="true">
+    <div class="drawer-header"><div><div class="eyebrow">CONTROL THE CONDITIONS</div><h2>Environment</h2></div><button class="close-button" data-action="settings" aria-label="Close settings">×</button></div>
+    <div class="setting-group"><div class="setting-title">View mode <small>CAMERA</small></div><div class="choice-row"><button data-action="cinematic">Cinematic</button><button data-action="orbit">Orbit</button><button data-action="walkExterior">Exterior walk</button><button data-action="interior">Interior walk</button></div></div>
+    <div class="setting-group"><div class="setting-title">Atmosphere <small>LIVE PRESET</small></div><div class="choice-row"><button data-env="clear" class="active">Clear day</button><button data-env="golden">Golden hour</button><button data-env="overcast">Overcast</button><button data-env="blue">Blue hour</button></div><p>Lighting, sky, water colour and exposure transition together. Environment-map updates may be less gradual than the live lighting change.</p></div>
+    <div class="setting-group"><div class="setting-title">Graphics <small id="qualityDetail">BALANCED PROFILE</small></div><div class="choice-row"><button data-quality="low">Low</button><button data-quality="medium" class="active">Medium</button><button data-quality="high">High</button><button data-quality="ultra">Ultra</button><button data-quality="auto">Auto</button></div><p id="qualityDescription">Balanced rendering scale and shadow quality for general-purpose hardware.</p></div>
+    <div class="setting-group"><div class="setting-title">Atmospheric sound <small id="audioState">OFF</small></div><div class="volume-row"><button class="button-quiet" data-action="sound" id="soundDrawerButton">ENABLE SOUND ↗</button><input type="range" min="0" max="100" value="32" id="volumeSlider" aria-label="Ocean ambience volume"></div><p>Procedurally generated low-level ambience. Audio starts only after your interaction.</p></div>
+    <div class="setting-group"><div class="setting-title">Motion</div><div class="choice-row"><button data-motion="normal" class="active">Cinematic motion</button><button data-motion="reduced">Reduced motion</button></div><p>Reduced motion slows the automated camera and subtle vessel movement.</p></div>
+    <div class="setting-group"><div class="setting-title">Rendering information</div><p id="renderInfo">Procedural ocean shader · PBR vessel materials · shadow-mapped directional light. No remote model or video assets required.</p><div class="choice-row" style="margin-top:12px"><button data-action="reset">Reset view</button><button data-action="fullscreen">Fullscreen</button><button data-action="about">About &amp; enquiry</button></div></div>
+  </aside>
+  <aside class="info-panel" id="infoPanel" aria-live="polite"><button class="close-button" data-action="closeInfo" aria-label="Close information">×</button><div class="eyebrow" id="infoEyebrow">VESSEL NOTES</div><h3 id="infoTitle">A coherent world</h3><p id="infoText">Explore the vessel at your own pace.</p><a href="mailto:mittalshaurya66@gmail.com?subject=INFINITE%20OCEAN%20%E2%80%94%20Project%20Enquiry" id="infoLink" style="display:none">Project enquiry ↗</a></aside>
+  <div class="help-overlay" id="helpOverlay"><section class="help-card"><button class="close-button" data-action="help" aria-label="Close help">×</button><div class="eyebrow">A BRIEF FIELD GUIDE</div><h2>Take your time with the sea.</h2><p>INFINITE OCEAN is a conceptual, procedural 3D maritime visualization. Move between a cinematic view, a free orbit camera and a walkable deck connected to the vessel's interior.</p><div class="help-grid"><div class="help-item"><strong>Explore on desktop</strong><p>Choose Exterior or Interior, click the scene to capture the mouse, then use WASD to move. Move the mouse to look. Press Escape to release it.</p></div><div class="help-item"><strong>Explore on mobile</strong><p>Drag across the scene to look around. Use the directional pad to move. Tap a room label to visit that space.</p></div><div class="help-item"><strong>Interact</strong><p>Approach highlighted objects and press E or the on-screen prompt for additional details. Walk through the aft doorway to transition between deck and interior. The cabin bed supports a resting interaction. Visit the bridge and choose Take the Helm to drive using gears 1–5, R and N.</p></div><div class="help-item"><strong>What is simulated?</strong><p>The waves use procedural vertex displacement and shader lighting; the driver uses a speed-dependent arcade marine model, not full hydrodynamics. Reflections and foam are approximations. The framed portrait loads the real ./shaurya.jpg asset when supplied beside this HTML file.</p></div></div></section></div>
+
+  <aside class="drive-panel" id="drivePanel" aria-label="Ship driving controls" aria-hidden="true">
+    <div class="drive-head"><div><div class="drive-eyebrow">INFINITE OCEAN / HELM</div><div class="drive-title">Captain's station</div></div><div class="drive-live" id="driveLiveState">STATIONARY</div></div>
+    <div class="drive-telemetry">
+      <div class="drive-readout"><span>Speed</span><strong id="driveSpeed">0.0</strong><small>Knots · simulated</small></div>
+      <div class="drive-readout"><span>Heading</span><strong id="driveHeading">000°</strong><small>Compass bearing</small></div>
+      <div class="drive-readout"><span>Gear</span><strong id="driveGearReadout">N</strong><small id="drivePropulsion">Neutral</small></div>
+    </div>
+    <div class="drive-section-label"><span>Transmission</span><span>W throttle · S brake</span></div>
+    <div class="gear-selector" aria-label="Select propulsion gear"><button data-gear="1" aria-label="Forward gear 1">1</button><button data-gear="2" aria-label="Forward gear 2">2</button><button data-gear="3" aria-label="Forward gear 3">3</button><button data-gear="4" aria-label="Forward gear 4">4</button><button data-gear="5" aria-label="Forward gear 5">5</button><button data-gear="R" aria-label="Reverse gear">R</button><button data-gear="N" aria-label="Neutral gear">N</button></div>
+    <div class="drive-controls" aria-label="Driving controls"><button data-drive-hold="left" aria-label="Steer port">◀ PORT</button><button data-drive-hold="throttle" aria-label="Hold to apply throttle">HOLD<br>THROTTLE</button><button data-drive-hold="right" aria-label="Steer starboard">STBD ▶</button><button data-drive-hold="brake" aria-label="Hold brake">BRAKE</button></div>
+    <div class="drive-footer"><button data-drive-action="stop">■ STOP</button><button data-action="driveCamera">CAMERA ↗</button><button data-action="driveExit">EXIT HELM</button></div>
+    <div class="drive-tip"><strong>W / ↑</strong> throttle · <strong>A / D</strong> steer · <strong>S / SPACE</strong> brake · <strong>1–5</strong> forward gears · <strong>R</strong> reverse · <strong>N</strong> neutral · <strong>C</strong> change camera. The vessel uses an arcade-style, speed-dependent marine movement model.</div>
+  </aside>
+  <div class="sleep-overlay" id="sleepOverlay" aria-hidden="true"><section class="sleep-card"><div class="sleep-mark" aria-hidden="true"></div><div class="eyebrow">PRIVATE CABIN / REST MODE</div><h2>Let the ocean carry the moment.</h2><p>The vessel remains in its environment while the view settles into a resting state. Wake whenever you're ready to explore again.</p><button data-action="wake">WAKE UP · RESUME EXPLORATION</button><p style="margin:13px auto 0;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#91a5a5">Press E or Escape to wake</p></section></div>
+
+  <div class="toast" id="toast" role="status"></div>
+</div>
+<script>
+(() => {
+  'use strict';
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+  const loading = $('#loading'), loadStatus = $('#loadStatus'), errorScreen = $('#errorScreen');
+  const canvas = $('#webgl');
+  let app = null;
+  const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  $('#retryButton').addEventListener('click', () => location.reload());
+
+  import('https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js')
+    .then(THREE => {
+      try { app = createExperience(THREE); }
+      catch (error) { console.error(error); showFatal('The 3D environment could not be constructed. Try reloading in a browser with WebGL 2 enabled.'); }
+    })
+    .catch(error => {
+      console.error('Three.js CDN import failed:', error);
+      showFatal('The rendering library could not be downloaded. Check your internet connection, allow access to cdn.jsdelivr.net, and reload. The page intentionally does not show a fake static render.');
+    });
+
+  function showFatal(message) {
+    loading.classList.add('is-hidden');
+    $('#errorMessage').textContent = message;
+    errorScreen.classList.add('visible');
+  }
+
+  function createExperience(THREE) {
+    loadStatus.textContent = 'CREATING THE PROCEDURAL WORLD';
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance', stencil: false, depth: true });
+    } catch (error) {
+      throw new Error('WebGL renderer initialization failed. ' + error.message);
+    }
+    if (!renderer.capabilities.isWebGL2) throw new Error('This build of Three.js requires WebGL 2.');
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setClearColor(0x8daeb9, 1);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x9bb6bf, 180, 650);
+    const camera = new THREE.PerspectiveCamera(47, 1, 0.08, 3000);
+    camera.rotation.order = 'YXZ';
+    const clock = new THREE.Clock();
+
+    const isTouchDevice = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+    const lowHardware = (navigator.deviceMemory && navigator.deviceMemory <= 4) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+    let qualityMode = 'medium';
+    if (isTouchDevice || lowHardware) qualityMode = 'medium';
+    else qualityMode = 'high';
+    let autoQuality = true;
+    let reducedMotion = reducedMotionQuery.matches;
+    let time = 0, frameCount = 0, fpsClock = 0, currentFps = 0;
+    let cameraMode = 'cinematic';
+    let worldMode = 'exterior';
+    let started = false;
+    let cinematicTime = 0;
+    let manuallyControlled = false;
+    let orbitTheta = 0.76, orbitPhi = 0.28, orbitRadius = 40;
+    let yaw = 0, pitch = -0.02;
+    let lastPointer = null;
+    let touchPointerId = null;
+    let toastTimer = null;
+    const keys = new Set();
+    const player = { x: 0, z: 10.25, speed: 4.05 };
+    const shipRoot = new THREE.Group();
+    shipRoot.name = 'INFINITE OCEAN · procedural vessel root';
+    scene.add(shipRoot);
+    // Additive vehicle and rest states; existing exploration state and scene objects remain intact.
+    const driveState = { active:false, gear:'N', speed:0, heading:0, view:'cockpit', stopRequested:false, steering:0, wheelAngle:0, motion:'STATIONARY', uiClock:0 };
+    const driveInputs = { throttle:false, left:false, right:false, brake:false };
+    let sleepTransition = null, wakeBlend = null, isSleeping = false;
+    const ktsPerMps = 1.943844;
+    const objectsToDispose = [];
+    const obstacleBoxes = [];
+    const interactables = [];
+    const roomDefs = {
+      bridge: { title: 'Navigation bridge', z: -4.65, description: 'The forward command space. A panoramic windscreen, restrained instrument glow and a compact navigation console give this room a focused, practical character.' },
+      cabin: { title: 'Private cabin', z: -1.75, description: 'A compact private cabin with warm timber, soft upholstery, integrated storage and a calm, low-level lighting scheme.' },
+      dining: { title: 'Dining salon', z: 1.05, description: 'A dedicated dining area with a timber table, upholstered seating, brushed-metal details and warm pendant-style light.' },
+      lounge: { title: 'Main lounge', z: 4.1, description: 'The main gathering space pairs wide side windows with soft seating, warm wood flooring and low-profile furniture.' }
+    };
+
+    const presets = {
+      clear: { label:'Clear day', skyTop:'#4b91bd', skyHorizon:'#d9dfd8', water:'#15526a', sun:'#fff1d6', sunDir:[-.38,.82,.43], sunIntensity:3.0, hemiSky:'#a8d7e4', hemiGround:'#4f5c5c', hemiIntensity:1.38, exposure:1.05, fog:'#b6cdd1', envIntensity:0.85, wind:1.0, cloud:0.16 },
+      golden: { label:'Golden hour', skyTop:'#526e89', skyHorizon:'#f1b17a', water:'#16465a', sun:'#ffd0a0', sunDir:[-.82,.31,.48], sunIntensity:2.25, hemiSky:'#d1a887', hemiGround:'#514248', hemiIntensity:1.18, exposure:1.03, fog:'#d1ad9b', envIntensity:0.65, wind:0.85, cloud:0.24 },
+      overcast: { label:'Overcast marine', skyTop:'#748991', skyHorizon:'#b9c9c8', water:'#345a63', sun:'#d8e2df', sunDir:[.24,.63,-.58], sunIntensity:0.9, hemiSky:'#c7d5d7', hemiGround:'#626e70', hemiIntensity:1.3, exposure:1.08, fog:'#bac7c6', envIntensity:0.72, wind:1.15, cloud:0.52 },
+      blue: { label:'Blue hour', skyTop:'#07192d', skyHorizon:'#314a5b', water:'#08283b', sun:'#9bbad0', sunDir:[-.4,.24,.88], sunIntensity:0.42, hemiSky:'#496a83', hemiGround:'#101923', hemiIntensity:0.8, exposure:1.15, fog:'#344b5a', envIntensity:0.5, wind:0.78, cloud:0.22 }
+    };
+    let currentPreset = 'clear';
+    let transition = null;
+    const colors = {
+      ivory: mat(0xd9d9cc, .35, .12), white: mat(0xe8e5da,.28,.12), navy: mat(0x101f2b,.27,.3), hullDark: mat(0x0d2635,.3,.32), copper: mat(0xb58b58,.28,.72), brass: mat(0xc3a56c,.25,.7), steel: mat(0x819298,.24,.78), brushed: mat(0x65757a,.48,.62), rubber: mat(0x1c292c,.78,.03), darkGlass: mat(0x152c39,.21,.28), windowFrame: mat(0x9daba8,.3,.52), deck: mat(0xd9d6ca,.42,.08), teak: null, teakDark: null, upholstery: mat(0x536e75,.82,.02), upholsteryLight: mat(0xb3aa97,.8,.02), cream: mat(0xd8d0bd,.76,.02), wall: mat(0xc9c8ba,.74,.01), black: mat(0x111a1d,.38,.12), red: mat(0x9d3e32,.52,.02), screen: mat(0x123846,.22,.15,{emissive:0x0c3444,emissiveIntensity:.45}), plant: mat(0x334a3c,.78,.0)
+    };
+    const woodTexture = makeWoodTexture(THREE);
+    colors.teak = new THREE.MeshStandardMaterial({ map:woodTexture, roughness:.48, metalness:.02, color:0xd7c0a0 });
+    colors.teakDark = new THREE.MeshStandardMaterial({ map:woodTexture, roughness:.57, metalness:.02, color:0x987350 });
+    const woodRelief=makeReliefTexture(THREE,'wood');woodRelief.repeat.set(1,2.5);
+    const fabricRelief=makeReliefTexture(THREE,'fabric');
+    const paintRelief=makeReliefTexture(THREE,'metal');paintRelief.repeat.set(1.8,2.2);
+    const brushedRelief=makeReliefTexture(THREE,'metal');brushedRelief.repeat.set(3.5,3.5);
+    for(const m of [colors.teak,colors.teakDark]){m.bumpMap=woodRelief;m.bumpScale=.018;m.needsUpdate=true;}
+    for(const m of [colors.upholstery,colors.upholsteryLight,colors.cream]){m.bumpMap=fabricRelief;m.roughnessMap=fabricRelief;m.bumpScale=.012;m.roughness=.84;m.needsUpdate=true;}
+    for(const m of [colors.white,colors.ivory,colors.wall]){m.bumpMap=paintRelief;m.bumpScale=.0035;m.roughnessMap=paintRelief;m.needsUpdate=true;}
+    colors.deck.bumpMap=woodRelief;colors.deck.bumpScale=.006;colors.deck.roughnessMap=woodRelief;colors.deck.roughness=.49;colors.deck.needsUpdate=true;
+    for(const m of [colors.brushed,colors.steel,colors.brass,colors.copper]){m.bumpMap=brushedRelief;m.bumpScale=.003;m.roughnessMap=brushedRelief;m.needsUpdate=true;}
+    const glass = new THREE.MeshPhysicalMaterial({ color:0x8bb7c1, roughness:.16, metalness:.12, transparent:true, opacity:.32, transmission:.18, thickness:.12, side:THREE.DoubleSide, depthWrite:false, envMapIntensity:1.0 });
+    const darkGlass = new THREE.MeshPhysicalMaterial({ color:0x152b39, roughness:.17, metalness:.22, transparent:true, opacity:.65, transmission:.06, side:THREE.DoubleSide, depthWrite:false });
+    const emissiveWarm = new THREE.MeshStandardMaterial({ color:0xf4cb91, emissive:0xe6a965, emissiveIntensity:.48, roughness:.4 });
+    const emissiveCool = new THREE.MeshStandardMaterial({ color:0x5da8c4, emissive:0x247fa1, emissiveIntensity:.65, roughness:.3 });
+    const shipLightMaterials = [emissiveWarm, emissiveCool];
+
+    function mat(color, roughness=.5, metalness=0, extra={}) { return new THREE.MeshStandardMaterial({ color, roughness, metalness, ...extra }); }
+    function tracked(geometry, material) { objectsToDispose.push(geometry); if (material && material.dispose) objectsToDispose.push(material); return new THREE.Mesh(geometry, material); }
+    function addBox(parent, x,y,z, sx,sy,sz, material, options={}) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz), material);
+      mesh.position.set(x,y,z); if(options.rx) mesh.rotation.x=options.rx; if(options.ry) mesh.rotation.y=options.ry; if(options.rz) mesh.rotation.z=options.rz;
+      mesh.castShadow = options.castShadow !== false; mesh.receiveShadow = options.receiveShadow !== false; parent.add(mesh); return mesh;
+    }
+    function addSphere(parent,x,y,z,r,material,scale=[1,1,1],segments=20) { const m=new THREE.Mesh(new THREE.SphereGeometry(r,segments,Math.max(8,Math.floor(segments*.6))),material);m.position.set(x,y,z);m.scale.set(...scale);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m; }
+    function addCylinderBetween(parent,a,b,r,material,radial=8,r2=r) { const av=new THREE.Vector3(...a),bv=new THREE.Vector3(...b),d=new THREE.Vector3().subVectors(bv,av);const g=new THREE.CylinderGeometry(r2,r,d.length(),radial,1);const m=new THREE.Mesh(g,material);m.position.copy(av).add(bv).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());m.castShadow=true;m.receiveShadow=true;parent.add(m);return m; }
+    function addTube(parent, points, radius, material, tubularSegments=100, radialSegments=6) { const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,tubularSegments,radius,radialSegments,false),material);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh; }
+    function addRoundedPrism(parent, x,y,z, width,length,height,radius,material, bevel=.035) {
+      const s=new THREE.Shape(); const w=width/2, h=length/2, r=Math.min(radius,w*.48,h*.48);
+      s.moveTo(-w+r,-h);s.lineTo(w-r,-h);s.quadraticCurveTo(w,-h,w,-h+r);s.lineTo(w,h-r);s.quadraticCurveTo(w,h,w-r,h);s.lineTo(-w+r,h);s.quadraticCurveTo(-w,h,-w,h-r);s.lineTo(-w,-h+r);s.quadraticCurveTo(-w,-h,-w+r,-h);s.closePath();
+      const g=new THREE.ExtrudeGeometry(s,{depth:height,bevelEnabled:bevel>0,bevelThickness:bevel,bevelSize:bevel,bevelSegments:2,steps:1,curveSegments:5});g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+    }
+    function addFloorObstacle(x,z,sx,sz) { obstacleBoxes.push({minX:x-sx/2,maxX:x+sx/2,minZ:z-sz/2,maxZ:z+sz/2}); }
+    function boxObstacle(x,z,sx,sz) { addFloorObstacle(x,z,sx,sz); }
+
+    // Lighting, procedural sky and view-dependent water reflection approximation.
+    const hemisphere = new THREE.HemisphereLight(0xa8d7e4,0x4f5c5c,1.38); scene.add(hemisphere);
+    const ambient = new THREE.AmbientLight(0xffffff,.32);scene.add(ambient);
+    const sunLight = new THREE.DirectionalLight(0xfff1d6,3.0);sunLight.position.set(-40,80,43);sunLight.castShadow=true;
+    sunLight.shadow.mapSize.set(1536,1536);sunLight.shadow.camera.left=-32;sunLight.shadow.camera.right=32;sunLight.shadow.camera.top=30;sunLight.shadow.camera.bottom=-30;sunLight.shadow.camera.near=.5;sunLight.shadow.camera.far=180;sunLight.shadow.bias=-.00016;sunLight.shadow.normalBias=.024;sunLight.shadow.radius=3;scene.add(sunLight);scene.add(sunLight.target);
+    const skyUniforms = { uSkyTop:{value:new THREE.Color(presets.clear.skyTop)},uHorizon:{value:new THREE.Color(presets.clear.skyHorizon)},uSunDir:{value:new THREE.Vector3(...presets.clear.sunDir).normalize()},uSunColor:{value:new THREE.Color(presets.clear.sun)},uSunIntensity:{value:1.0},uCloud:{value:presets.clear.cloud} };
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(1900,36,22),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,depthTest:false,uniforms:skyUniforms,vertexShader:`varying vec3 vDirection; void main(){vec4 w=modelMatrix*vec4(position,1.0);vDirection=normalize(w.xyz-cameraPosition);vec4 mv=viewMatrix*w;gl_Position=projectionMatrix*mv;gl_Position.z=gl_Position.w;}`,fragmentShader:`uniform vec3 uSkyTop;uniform vec3 uHorizon;uniform vec3 uSunDir;uniform vec3 uSunColor;uniform float uSunIntensity;uniform float uCloud;varying vec3 vDirection;void main(){vec3 d=normalize(vDirection);float h=d.y;float t=smoothstep(-0.18,0.72,h);vec3 col=mix(uHorizon,uSkyTop,pow(t,.82));float haze=exp(-pow((h+.005)*7.5,2.0));col=mix(col,uHorizon,haze*.22);float n=sin(d.x*22.0+d.z*8.0)*sin(d.z*29.0-d.y*17.0)+.45*sin(d.x*41.0+d.y*25.0);float cloudMask=smoothstep(.25,.95,n)*(1.0-smoothstep(.04,.46,abs(h)));col=mix(col,mix(uHorizon,uSkyTop,.63),cloudMask*uCloud*.34);float sd=max(dot(d,normalize(uSunDir)),0.0);float halo=exp(-(1.0-sd)*38.0);float disk=smoothstep(.99955,.99988,sd);col+=uSunColor*(halo*.22+disk*.75)*uSunIntensity;gl_FragColor=vec4(col,1.0);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>\n}` }));sky.renderOrder=-1000;scene.add(sky);
+
+    const waterUniforms = { uTime:{value:0},uSunDir:{value:new THREE.Vector3(...presets.clear.sunDir).normalize()},uSunColor:{value:new THREE.Color(presets.clear.sun)},uWaterColor:{value:new THREE.Color(presets.clear.water)},uHorizon:{value:new THREE.Color(presets.clear.skyHorizon)},uSkyTop:{value:new THREE.Color(presets.clear.skyTop)},uBoatPos:{value:new THREE.Vector3(0,0,0)},uBoatHeading:{value:0},uBoatSpeed:{value:0},uWind:{value:1.0},uSunPower:{value:1.0} };
+    const waterSegments = isTouchDevice ? 260 : (qualityMode==='ultra'?680:qualityMode==='high'?600:500);
+    const oceanGeometry = new THREE.PlaneGeometry(1900,1900,waterSegments,waterSegments);oceanGeometry.rotateX(-Math.PI/2);
+    const oceanMaterial = new THREE.ShaderMaterial({ uniforms:waterUniforms, vertexShader:`uniform float uTime;uniform float uWind;varying vec3 vWorldPosition;varying vec3 vNormal;varying float vHeight;void main(){vec3 p=position;vec2 p2=p.xz;float h=0.0;float sx=0.0;float sz=0.0;vec2 d1=normalize(vec2(.86,.42));float k1=.24;float a1=.27;float q1=dot(p2,d1)*k1+uTime*.72*uWind;h+=a1*sin(q1);sx+=a1*k1*cos(q1)*d1.x;sz+=a1*k1*cos(q1)*d1.y;p.xz+=d1*(.09*a1*cos(q1));vec2 d2=normalize(vec2(-.52,.85));float k2=.49;float a2=.12;float q2=dot(p2,d2)*k2-uTime*1.03*uWind;h+=a2*sin(q2);sx+=a2*k2*cos(q2)*d2.x;sz+=a2*k2*cos(q2)*d2.y;p.xz+=d2*(.14*a2*cos(q2));vec2 d3=normalize(vec2(.16,.99));float k3=.96;float a3=.054;float q3=dot(p2,d3)*k3+uTime*1.54*uWind;h+=a3*sin(q3);sx+=a3*k3*cos(q3)*d3.x;sz+=a3*k3*cos(q3)*d3.y;vec2 d4=normalize(vec2(.93,-.35));float k4=2.15;float a4=.022;float q4=dot(p2,d4)*k4-uTime*2.05*uWind;h+=a4*sin(q4);sx+=a4*k4*cos(q4)*d4.x;sz+=a4*k4*cos(q4)*d4.y;vec2 d5=normalize(vec2(-.7,-.72));float k5=3.5;float a5=.012;float q5=dot(p2,d5)*k5+uTime*2.75*uWind;h+=a5*sin(q5);sx+=a5*k5*cos(q5)*d5.x;sz+=a5*k5*cos(q5)*d5.y;vec2 d6=normalize(vec2(.37,-.93));float k6=.115;float a6=.095;float q6=dot(p2,d6)*k6-uTime*.31*uWind;h+=a6*sin(q6);sx+=a6*k6*cos(q6)*d6.x;sz+=a6*k6*cos(q6)*d6.y;vec2 d7=normalize(vec2(-.91,.18));float k7=.178;float a7=.048;float q7=dot(p2,d7)*k7+uTime*.43*uWind;h+=a7*sin(q7);sx+=a7*k7*cos(q7)*d7.x;sz+=a7*k7*cos(q7)*d7.y;p.y+=h;vHeight=h;vNormal=normalize(vec3(-sx,1.0,-sz));vec4 world=modelMatrix*vec4(p,1.0);vWorldPosition=world.xyz;gl_Position=projectionMatrix*viewMatrix*world;}`, fragmentShader:`uniform float uTime;uniform vec3 uSunDir;uniform vec3 uSunColor;uniform vec3 uWaterColor;uniform vec3 uHorizon;uniform vec3 uSkyTop;uniform vec3 uBoatPos;uniform float uBoatHeading;uniform float uBoatSpeed;uniform float uSunPower;varying vec3 vWorldPosition;varying vec3 vNormal;varying float vHeight;void main(){vec3 V=normalize(cameraPosition-vWorldPosition);vec3 L=normalize(uSunDir);vec3 N=normalize(vNormal);float rippleX=sin(vWorldPosition.x*.88+uTime*1.4)*sin(vWorldPosition.z*.65-uTime*.9);float rippleZ=cos(vWorldPosition.x*.54-uTime*1.15)*sin(vWorldPosition.z*.93+uTime*.7);float microX=sin(vWorldPosition.x*2.37+vWorldPosition.z*1.21+uTime*1.7)*cos(vWorldPosition.z*2.91-uTime*1.13);float microZ=cos(vWorldPosition.x*1.63-vWorldPosition.z*2.42-uTime*1.38)*sin(vWorldPosition.x*2.76+uTime*.93);N=normalize(N+vec3(rippleX*.032+microX*.014,0.0,rippleZ*.032+microZ*.014));float ndv=max(dot(N,V),0.0);float ndl=max(dot(N,L),0.0);float fresnel=.025+.975*pow(1.0-ndv,5.0);vec3 R=reflect(-V,N);float skyMix=smoothstep(-.13,.48,R.y);vec3 reflected=mix(uHorizon,uSkyTop,skyMix);float sunDisk=pow(max(dot(R,L),0.0),420.0)*1.2;float specBase=max(dot(reflect(-L,N),V),0.0);float spec=pow(specBase,145.0)*1.12+pow(specBase,28.0)*.052+pow(specBase,9.0)*.012;float softSheen=pow(max(dot(reflect(-L,N),V),0.0),5.5)*.045;vec3 deep=uWaterColor*(.48+.34*ndl);float depthTone=.5+.5*sin(vWorldPosition.x*.038+vWorldPosition.z*.026+uTime*.08);deep*=mix(.94,1.045,depthTone);vec3 color=mix(deep,reflected,.085+fresnel*.875);color+=uSunColor*(spec+sunDisk+softSheen)*uSunPower;float horizonFade=smoothstep(150.0,660.0,distance(cameraPosition,vWorldPosition));color=mix(color,uHorizon,horizonFade*.50);vec2 relativeToBoat=vWorldPosition.xz-uBoatPos.xz;float hc=cos(uBoatHeading),hs=sin(uBoatHeading);float localBoatX=hc*relativeToBoat.x-hs*relativeToBoat.y;float z=hs*relativeToBoat.x+hc*relativeToBoat.y;float wakeMoving=clamp(abs(uBoatSpeed)/2.2,0.0,1.0);float wakeHalf=max(.2,(z-4.1)*.235+.28);float wakeLine=abs(abs(localBoatX)-wakeHalf);float tail=step(4.4,z)*(1.0-smoothstep(8.0,26.0,z))*wakeMoving;float wake=(1.0-smoothstep(.035,.31,wakeLine))*tail*(.56+.44*sin(z*2.1+uTime*1.6));float beam=mix(1.2,3.25,smoothstep(-13.0,-7.0,z))*(1.0-.22*smoothstep(7.0,13.0,z));float sideFoam=exp(-pow((abs(localBoatX)-beam)/.37,2.0))*(1.0-smoothstep(5.0,10.8,abs(z)))*(.12+.88*wakeMoving);float foam=clamp(wake*.54+sideFoam*.34,0.0,.62);float streak=sin(vWorldPosition.x*1.9+sin(vWorldPosition.z*.7+uTime)*1.5+uTime*.4)*.5+.5;color=mix(color,vec3(.74,.84,.84),foam*(.65+.25*streak));float dist=distance(cameraPosition,vWorldPosition);float haze=smoothstep(240.0,900.0,dist);color=mix(color,uHorizon,haze*.32);gl_FragColor=vec4(color,1.0);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>\n}`, side:THREE.FrontSide });
+    const ocean = new THREE.Mesh(oceanGeometry,oceanMaterial);ocean.position.y=0;ocean.frustumCulled=false;ocean.renderOrder=-2;scene.add(ocean);
+
+    const hullMaterial = new THREE.MeshStandardMaterial({ color:0xffffff, vertexColors:true, roughness:.31, metalness:.24 });
+    hullMaterial.onBeforeCompile = shader => {
+      shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vHullDetailWorld;');
+      shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvHullDetailWorld=(modelMatrix*vec4(transformed,1.0)).xyz;');
+      shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vHullDetailWorld;');
+      shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\nfloat hullGrain=sin(vHullDetailWorld.x*3.1+sin(vHullDetailWorld.z*.61)*1.4)*sin(vHullDetailWorld.z*1.85+vHullDetailWorld.y*5.2);diffuseColor.rgb*=.992+hullGrain*.008;');
+      shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nfloat hullRoughVariation=sin(vHullDetailWorld.x*2.7+vHullDetailWorld.z*1.3)*.012;roughnessFactor=clamp(roughnessFactor+hullRoughVariation,.16,.72);');
+    };
+    hullMaterial.customProgramCacheKey=()=> 'infinite-ocean-hull-detail-v1';
+    function deckBeamAt(z) {
+      const pts=[[-14,.10],[-13,.85],[-12,2.15],[-10.6,2.88],[-8,3.30],[-4,3.48],[2.5,3.50],[6.5,3.38],[8.5,3.14],[10.3,2.60],[12,1.72],[14,.48]];
+      for(let i=0;i<pts.length-1;i++){if(z<=pts[i+1][0]){const t=THREE.MathUtils.clamp((z-pts[i][0])/(pts[i+1][0]-pts[i][0]),0,1);const s=t*t*(3-2*t);return THREE.MathUtils.lerp(pts[i][1],pts[i+1][1],s);}}
+      return .48;
+    }
+    function createHull() {
+      const nz=112, profile=[[-1,.82],[-.99,.35],[-.94,-.27],[-.80,-.82],[-.61,-1.28],[-.34,-1.62],[0,-1.78],[.34,-1.62],[.61,-1.28],[.80,-.82],[.94,-.27],[.99,.35],[1,.82],[0,.82]];
+      const nr=profile.length, pos=[], col=[], idx=[];const cWhite=new THREE.Color(0xdadbd3),cDark=new THREE.Color(0x102a39);
+      for(let i=0;i<=nz;i++){const z=-14+28*i/nz,beam=deckBeamAt(z);for(let j=0;j<nr;j++){const [xnorm,y]=profile[j];pos.push(xnorm*beam,y,z);const weight=THREE.MathUtils.smoothstep(y,-.08,.22);const c=cDark.clone().lerp(cWhite,weight);col.push(c.r,c.g,c.b);}}
+      for(let i=0;i<nz;i++){for(let j=0;j<nr;j++){const a=i*nr+j,b=(i+1)*nr+j,c=(i+1)*nr+(j+1)%nr,d=i*nr+(j+1)%nr;idx.push(a,c,b,a,d,c);}}
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,hullMaterial);m.castShadow=true;m.receiveShadow=true;shipRoot.add(m);
+      // A slender copper boot stripe follows the hull's upper waterline on both sides.
+      for(const side of [-1,1]){const pts=[];for(let z=-11.7;z<=11.8;z+=.35){const b=deckBeamAt(z);pts.push([side*b*.982,.245,z]);}addTube(shipRoot,pts,.024,colors.copper,110,6);}
+    }
+    createHull();
+
+    // A shaped, bevel-edged deck follows the tapered hull plan.
+    function createDeck() {
+      const s=new THREE.Shape();s.moveTo(0,14.05);s.quadraticCurveTo(1.15,13.75,1.88,12.65);s.quadraticCurveTo(3.12,10.65,3.28,7.7);s.lineTo(3.45,-5.0);s.quadraticCurveTo(3.40,-9.05,2.55,-12.15);s.quadraticCurveTo(1.85,-13.8,.78,-14.02);s.lineTo(-.78,-14.02);s.quadraticCurveTo(-1.85,-13.8,-2.55,-12.15);s.quadraticCurveTo(-3.40,-9.05,-3.45,-5.0);s.lineTo(-3.28,7.7);s.quadraticCurveTo(-3.12,10.65,-1.88,12.65);s.quadraticCurveTo(-1.15,13.75,0,14.05);s.closePath();
+      const g=new THREE.ExtrudeGeometry(s,{depth:.25,bevelEnabled:true,bevelThickness:.045,bevelSize:.05,bevelSegments:2,curveSegments:8,steps:1});g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,colors.deck);m.position.y=.70;m.castShadow=true;m.receiveShadow=true;shipRoot.add(m);
+      // Thin teak margins make the deck edge read as a constructed surface.
+      const trim=mat(0x76654d,.4,.3);for(const side of [-1,1]){const pts=[];for(let z=-10.8;z<=10.8;z+=.7){pts.push([side*(deckBeamAt(z)-.12),.965,z]);}addTube(shipRoot,pts,.035,trim,70,6);}
+    }
+    createDeck();
+
+    // Main cabin shell: genuine openings for glazing and four connected interior spaces.
+    const floorY=.972, cabinMinX=-2.18,cabinMaxX=2.18,cabinFront=-6.48,cabinBack=6.48, wallTop=3.58;
+    addRoundedPrism(shipRoot,0,3.58,0,4.95,13.72,.25,.36,colors.white,.045);
+    // Interior timber floor and restrained plank joints.
+    addBox(shipRoot,0,floorY+.025,0,4.36,.06,12.95,colors.teak,{castShadow:false});
+    const seamMat=mat(0x745d45,.75,.0);for(let z=-6.2;z<=6.2;z+=.72)addBox(shipRoot,0,floorY+.058,z,4.28,.009,.012,seamMat,{castShadow:false,receiveShadow:false});
+    // Exterior side walls are built in separated horizontal bands so the window openings are real.
+    for(const side of [-1,1]){
+      addBox(shipRoot,side*2.23,1.48,0,.18,1.00,12.9,colors.white);
+      addBox(shipRoot,side*2.23,3.18,0,.18,.80,12.9,colors.white);
+      // Broad, glazed openings between solid lower and upper wall bands.
+      const winZ=[-5.48,-4.20,-2.45,-1.25,.55,1.72,3.45,4.63];
+      for(const z of winZ){
+        addBox(shipRoot,side*2.235,2.39,z,.055,.88,.98,glass,{castShadow:false});
+        addBox(shipRoot,side*2.275,2.39,z,.045,.95,.055,colors.windowFrame,{castShadow:false});
+        addBox(shipRoot,side*2.275,2.39,z-.49,.045,.95,.055,colors.windowFrame,{castShadow:false});
+        addBox(shipRoot,side*2.275,1.96,z,.05,.07,1.03,colors.brass,{castShadow:false});
+        addBox(shipRoot,side*2.275,2.82,z,.05,.07,1.03,colors.windowFrame,{castShadow:false});
+      }
+      // Structural piers between the glazing bays.
+      for(const z of [-6.35,-4.85,-3.2,-1.85,-.35,1.05,2.65,4.02,5.35,6.36])addBox(shipRoot,side*2.23,2.28,z,.21,2.58,.13,colors.white);
+      // Exterior rub rail / inset reveal.
+      addBox(shipRoot,side*2.34,1.18,0,.055,.09,12.45,colors.copper,{castShadow:false});
+    }
+    // Forward bridge wall with panoramic glass; the aft wall has an actual central doorway.
+    addBox(shipRoot,0,1.47,cabinFront,4.42,.96,.18,colors.white);
+    addBox(shipRoot,-1.48,2.38,cabinFront,1.40,.85,.16,glass,{castShadow:false});addBox(shipRoot,0,2.38,cabinFront,1.40,.85,.16,glass,{castShadow:false});addBox(shipRoot,1.48,2.38,cabinFront,1.40,.85,.16,glass,{castShadow:false});
+    addBox(shipRoot,0,3.18,cabinFront,4.42,.78,.18,colors.white);
+    for(const x of [-2.08,-.74,.74,2.08])addBox(shipRoot,x,2.38,cabinFront-.02,.075,.96,.21,colors.windowFrame,{castShadow:false});
+    // The outer aft opening stays clear from deck to lintel so walking through it changes zones naturally.
+    // Remove the overlapping centre panel by positioning narrow side pieces only in the opening's lower row.
+    // Partition walls keep a clear 1.30 m central doorway between rooms.
+    const partitions=[-3.32,-.52,2.48];
+    for(const z of partitions){
+      addBox(shipRoot,-1.43,2.28,z,1.50,2.52,.16,colors.wall);
+      addBox(shipRoot,1.43,2.28,z,1.50,2.52,.16,colors.wall);
+      addBox(shipRoot,0,3.36,z,1.36,.36,.16,colors.wall);
+      // Door casings with visible depth; central opening remains traversable.
+      for(const x of [-.68,.68])addBox(shipRoot,x,2.28,z+(x<0?-.095:.095),.08,2.38,.18,colors.brass,{castShadow:false});
+      addBox(shipRoot,0,3.48,z,1.38,.07,.20,colors.teakDark,{castShadow:false});
+    }
+    // Replace the aft wall with two lower side piers and an overhead lintel, preserving a real exit.
+    // A narrow central top section connects the structure without blocking head clearance.
+    addBox(shipRoot,-1.38,2.26,cabinBack,1.55,2.55,.18,colors.white);
+    addBox(shipRoot,1.38,2.26,cabinBack,1.55,2.55,.18,colors.white);
+    addBox(shipRoot,0,3.42,cabinBack,1.28,.28,.18,colors.white);
+    for(const x of [-.66,.66]){addBox(shipRoot,x,2.25,cabinBack+.08,.075,2.48,.14,colors.brass,{castShadow:false});}
+
+    // Physical aft-wall portrait frame. The real source photograph is expected at ./shaurya.jpg;
+    // no synthetic replacement portrait is created if that source asset is absent.
+    const portraitFrameX=-1.38, portraitFrameY=2.43, portraitFrameZ=cabinBack-.145;
+    const portraitFrameWood=mat(0x30251d,.33,.32), portraitFrameEdge=mat(0x9c8057,.29,.58), portraitMatBacking=mat(0xe0d8c9,.78,.01);
+    addBox(shipRoot,portraitFrameX,portraitFrameY,portraitFrameZ,.82,1.12,.10,portraitFrameWood);
+    addBox(shipRoot,portraitFrameX-.375,portraitFrameY,portraitFrameZ-.066,.085,1.10,.075,portraitFrameEdge);
+    addBox(shipRoot,portraitFrameX+.375,portraitFrameY,portraitFrameZ-.066,.085,1.10,.075,portraitFrameEdge);
+    addBox(shipRoot,portraitFrameX,portraitFrameY-.515,portraitFrameZ-.066,.82,.085,.075,portraitFrameEdge);
+    addBox(shipRoot,portraitFrameX,portraitFrameY+.515,portraitFrameZ-.066,.82,.085,.075,portraitFrameEdge);
+    const portraitMat=new THREE.Mesh( new THREE.PlaneGeometry(.62,.84), new THREE.MeshStandardMaterial({color:0xe8e1d4,roughness:.84,metalness:0,side:THREE.DoubleSide}) );
+    portraitMat.position.set(portraitFrameX,portraitFrameY,portraitFrameZ-.108);portraitMat.rotation.y=Math.PI;portraitMat.castShadow=false;portraitMat.receiveShadow=true;shipRoot.add(portraitMat);
+    const portraitNoticeCanvas=document.createElement('canvas');portraitNoticeCanvas.width=512;portraitNoticeCanvas.height=700;
+    const portraitNoticeCtx=portraitNoticeCanvas.getContext('2d');portraitNoticeCtx.fillStyle='#d7d0c3';portraitNoticeCtx.fillRect(0,0,512,700);portraitNoticeCtx.strokeStyle='#aa9676';portraitNoticeCtx.lineWidth=3;portraitNoticeCtx.strokeRect(18,18,476,664);portraitNoticeCtx.fillStyle='#24333a';portraitNoticeCtx.textAlign='center';portraitNoticeCtx.font='600 23px Georgia,serif';portraitNoticeCtx.fillText('PORTRAIT ASSET',256,306);portraitNoticeCtx.font='18px sans-serif';portraitNoticeCtx.fillText('Place shaurya.jpg beside',256,347);portraitNoticeCtx.fillText('index.html to display the photo',256,378);
+    const portraitNoticeTexture=new THREE.CanvasTexture(portraitNoticeCanvas);portraitNoticeTexture.colorSpace=THREE.SRGBColorSpace;
+    const portraitNotice=new THREE.Mesh(new THREE.PlaneGeometry(.56,.75),new THREE.MeshBasicMaterial({map:portraitNoticeTexture,side:THREE.DoubleSide}));portraitNotice.position.copy(portraitMat.position);portraitNotice.position.z-=.002;portraitNotice.rotation.y=Math.PI;shipRoot.add(portraitNotice);
+    try {
+      new THREE.TextureLoader().load('./shaurya.jpg',texture=>{
+        texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());texture.generateMipmaps=true;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.magFilter=THREE.LinearFilter;
+        portraitMat.material.map=texture;portraitMat.material.color.set(0xffffff);portraitMat.material.roughness=.9;portraitMat.material.needsUpdate=true;
+        const iw=texture.image?.naturalWidth||texture.image?.width||1,ih=texture.image?.naturalHeight||texture.image?.height||1,ratio=iw/Math.max(1,ih),maxW=.56,maxH=.75;let w=Math.min(maxW,maxH*ratio),h=w/ratio;if(h>maxH){h=maxH;w=h*ratio;}portraitMat.scale.set(w/.62,h/.84,1);portraitNotice.visible=false;objectsToDispose.push(texture);
+      },undefined,error=>{console.warn('INFINITE OCEAN: could not load ./shaurya.jpg; the physical frame remains and displays an asset notice.',error);});
+    } catch(error) { console.warn('Portrait frame texture initialization failed; no alternate portrait was substituted.',error); }
+    const nameplateTexture=createLabelTexture(THREE,'SHAURYA MITTAL','VESSEL OWNER');const nameplate=new THREE.Mesh(new THREE.PlaneGeometry(.78,.13),new THREE.MeshBasicMaterial({map:nameplateTexture,transparent:true,side:THREE.DoubleSide,depthWrite:false}));nameplate.position.set(portraitFrameX,1.78,portraitFrameZ-.11);nameplate.rotation.y=Math.PI;shipRoot.add(nameplate);
+
+    // Interior ceiling is the underside of the external cabin roof; subtle inlaid seams and lights add scale.
+    const ceilingMat=mat(0xc3c3b7,.75,.01);addBox(shipRoot,0,3.545,0,4.30,.025,12.8,ceilingMat,{castShadow:false});
+    for(const z of [-5.1,-2.0,.95,3.9]){
+      addBox(shipRoot,0,3.565,z,1.35,.025,.44,colors.windowFrame,{castShadow:false});
+      addBox(shipRoot,0,3.525,z,1.12,.024,.28,emissiveWarm,{castShadow:false,receiveShadow:false});
+    }
+
+    // Hull fittings and scale cues.
+    for(const side of [-1,1]){
+      for(const z of [-8.8,-6.2,-3.6,-1.0,1.7,4.3,7.0,9.2]){
+        const beam=deckBeamAt(z)*.985;
+        const ring=new THREE.Mesh(new THREE.TorusGeometry(.19,.035,8,24),colors.brass);ring.position.set(side*(beam+.012),.24,z);ring.rotation.y=Math.PI/2;ring.castShadow=true;shipRoot.add(ring);
+        const disk=new THREE.Mesh(new THREE.CircleGeometry(.145,24),colors.darkGlass);disk.position.set(side*(beam+.024),.24,z);disk.rotation.y=side*Math.PI/2;shipRoot.add(disk);
+      }
+      for(const z of [5.1,7.0,8.8]){addSphere(shipRoot,side*(deckBeamAt(z)-.12),.55,z,.28,colors.rubber,[.82,1.15,.88],16);}
+      // Name boards use local canvas-generated typography rather than external image assets.
+      const labelTex=createLabelTexture(THREE,'INFINITE OCEAN','MARITIME STUDY');const labelMat=new THREE.MeshBasicMaterial({map:labelTex,transparent:true,side:THREE.DoubleSide,depthWrite:false});
+      const badge=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.42),labelMat);badge.position.set(side*(deckBeamAt(8.1)+.035),.45,8.1);badge.rotation.y=side*Math.PI/2;shipRoot.add(badge);
+    }
+    // Deck railings: repeated, connected stainless members follow a tapered perimeter.
+    const railPath=[[0,-13.25],[1.35,-12.8],[2.45,-11.25],[3.05,-9.3],[3.26,-6.0],[3.30,0],[3.24,6.2],[2.86,9.8],[2.15,12.0],[1.2,12.75],[0,12.95],[-1.2,12.75],[-2.15,12.0],[-2.86,9.8],[-3.24,6.2],[-3.30,0],[-3.26,-6.0],[-3.05,-9.3],[-2.45,-11.25],[-1.35,-12.8]];
+    const railingPoints=[];for(let i=0;i<railPath.length;i++){const a=railPath[i],b=railPath[(i+1)%railPath.length];const dist=Math.hypot(b[0]-a[0],b[1]-a[1]);const steps=Math.max(1,Math.ceil(dist/1.25));for(let k=0;k<steps;k++){const t=k/steps;railingPoints.push([THREE.MathUtils.lerp(a[0],b[0],t),THREE.MathUtils.lerp(a[1],b[1],t)]);}}
+    const topRail=[],midRail=[];
+    for(let i=0;i<railingPoints.length;i++){const [x,z]=railingPoints[i];addCylinderBetween(shipRoot,[x,.99,z],[x,1.78,z],.033,colors.steel,8);topRail.push([x,1.79,z]);midRail.push([x,1.43,z]);}
+    addTube(shipRoot,topRail,.045,colors.steel,Math.max(100,topRail.length*2),8);addTube(shipRoot,midRail,.026,colors.brushed,Math.max(100,midRail.length*2),6);
+    // Bollards, cleats, deck lights and safe boarding cues.
+    for(const side of [-1,1]){
+      for(const z of [-11.5,-8.8,10.8,12.1]){
+        const x=side*(Math.min(deckBeamAt(z)-.38,2.85));
+        addCylinderBetween(shipRoot,[x,.98,z],[x,1.18,z],.10,colors.brushed,10,.085);addCylinderBetween(shipRoot,[x-.12,1.13,z],[x+.12,1.13,z],.045,colors.steel,10);
+      }
+      for(const z of [-7.1,5.8,9.6]){addBox(shipRoot,side*2.88,1.08,z,.13,.15,.23,emissiveWarm,{castShadow:false,receiveShadow:false});}
+    }
+    // Lifebuoys and rescue equipment at readable distances.
+    for(const side of [-1,1]){
+      const torus=new THREE.Mesh(new THREE.TorusGeometry(.32,.09,10,28),colors.red);torus.position.set(side*2.42,1.55,5.0);torus.rotation.y=side*Math.PI/2;shipRoot.add(torus);
+      for(let k=0;k<4;k++){const a=k*Math.PI/2;const segment=new THREE.Mesh(new THREE.TorusGeometry(.32,.092,5,7,Math.PI/2),colors.white);segment.position.copy(torus.position);segment.rotation.y=torus.rotation.y;segment.rotation.z=a;shipRoot.add(segment);}
+      addBox(shipRoot,side*2.38,1.99,5.0,.44,.06,.48,colors.brushed,{castShadow:false});
+    }
+
+    // Raised exterior helm and radar package (exterior detail; not a separate walkable level).
+    addRoundedPrism(shipRoot,0,3.77,-3.65,3.56,3.52,.72,.42,colors.white,.045);
+    addBox(shipRoot,0,4.11,-5.445,3.18,.50,.055,darkGlass,{castShadow:false});
+    for(const side of [-1,1])addBox(shipRoot,side*1.78,4.10,-3.65,.055,.46,2.65,darkGlass,{castShadow:false});
+    addRoundedPrism(shipRoot,0,4.42,-3.65,3.95,3.86,.20,.45,colors.white,.035);
+    for(const side of [-1,1]){addCylinderBetween(shipRoot,[side*1.68,4.52,-2.25],[side*1.68,4.82,-2.25],.026,colors.steel,8);}
+    addCylinderBetween(shipRoot,[0,4.58,-4.1],[0,6.05,-4.1],.045,colors.steel,10,.025);
+    addCylinderBetween(shipRoot,[-.76,5.52,-4.1],[.76,5.52,-4.1],.026,colors.steel,8,.02);
+    addCylinderBetween(shipRoot,[-.42,5.83,-4.1],[.42,5.83,-4.1],.018,colors.brushed,8,.018);
+    addSphere(shipRoot,0,4.82,-2.72,.32,colors.white,[1,0.68,1],24);
+    addSphere(shipRoot,0,4.86,-2.72,.16,colors.darkGlass,[1,.72,1],18);
+    addSphere(shipRoot,-.62,4.60,-4.10,.075,emissiveWarm,[1,1,1],12);
+
+    // Interior rooms: wood, soft upholstery, glazing and actual collision boundaries.
+    const roomLights=[];
+    function addRoomLight(x,y,z,color,intensity,distance) { const l=new THREE.PointLight(color,intensity,distance,2);l.position.set(x,y,z);l.castShadow=false;shipRoot.add(l);roomLights.push(l);return l; }
+    addRoomLight(0,3.15,-4.7,0xb7dce7,15,8.5);addRoomLight(0,3.15,-1.8,0xffd3a1,14,7.5);addRoomLight(0,3.15,1.0,0xffd0a0,16,8);addRoomLight(0,3.12,4.0,0xffd0a0,20,9);
+    // Warm ceiling sconces under each ceiling panel.
+    for(const z of [-5.1,-2.0,.95,3.9]){addBox(shipRoot,-1.86,3.28,z,.06,.22,.30,emissiveWarm,{castShadow:false,receiveShadow:false});addBox(shipRoot,1.86,3.28,z,.06,.22,.30,emissiveWarm,{castShadow:false,receiveShadow:false});}
+    // Navigation console, controls and front display.
+    addRoundedPrism(shipRoot,0,1.02,-5.72,2.85,.74,.72,.10,colors.teakDark,.025);
+    addBox(shipRoot,0,1.78,-5.70,2.62,.07,.60,colors.black);
+    for(let i=0;i<4;i++){addBox(shipRoot,-.83+i*.55,1.83,-5.76,.39,.025,.34,colors.screen,{castShadow:false,receiveShadow:false});}
+    addBox(shipRoot,0,2.05,-5.08,1.6,.36,.10,colors.teakDark);
+    for(let i=0;i<3;i++){addBox(shipRoot,-.52+i*.52,2.1,-5.01,.40,.20,.02,colors.screen,{castShadow:false,receiveShadow:false});}
+    boxObstacle(0,-5.72,3.0,.95);
+    // Private cabin bed, side storage and reading lights.
+    addRoundedPrism(shipRoot,-1.30,1.04,-1.80,1.34,2.20,.32,.09,colors.teakDark,.025);
+    addRoundedPrism(shipRoot,-1.30,1.38,-1.80,1.19,2.04,.15,.09,colors.cream,.025);
+    addRoundedPrism(shipRoot,-1.30,1.48,-2.43,1.12,.48,.12,.10,colors.upholsteryLight,.025);
+    addBox(shipRoot,1.27,1.30,-1.78,.76,.58,1.9,colors.teakDark);addBox(shipRoot,1.27,1.63,-1.78,.78,.08,1.9,colors.teak);
+    addBox(shipRoot,1.25,2.04,-2.55,.65,.55,.08,colors.wall);addBox(shipRoot,1.25,2.12,-2.49,.45,.28,.025,colors.screen,{castShadow:false,receiveShadow:false});
+    boxObstacle(-1.30,-1.80,1.45,2.18);boxObstacle(1.27,-1.78,.85,1.95);
+    // Dining table on port side leaves a continuous central walking line through the room.
+    addRoundedPrism(shipRoot,-1.27,1.54,1.05,1.13,1.60,.13,.08,colors.teak,.025);
+    for(const x of [-1.68,-.86])for(const z of [.48,1.62])addBox(shipRoot,x,1.25,z,.10,.55,.10,colors.brushed);
+    for(const [x,z] of [[-1.25,.02],[-1.25,2.08],[-2.00,1.05]]){
+      addRoundedPrism(shipRoot,x,1.04,z,.56,.55,.16,.10,colors.upholstery,.035);addBox(shipRoot,x,1.38,z-.20,.52,.55,.10,colors.upholstery,{castShadow:true});
+    }
+    addRoundedPrism(shipRoot,.92,1.10,1.07,.70,.66,.20,.08,colors.teakDark,.025);
+    addSphere(shipRoot,-1.28,1.67,1.05,.10,colors.brass,[1,.45,1],14);
+    boxObstacle(-1.27,1.05,1.28,1.76);boxObstacle(-1.25,.02,.64,.65);boxObstacle(-1.25,2.08,.64,.65);boxObstacle(-2.00,1.05,.65,.65);boxObstacle(.92,1.07,.72,.72);
+    // Lounge: two compact sofas and a low table; central circulation remains clear.
+    for(const side of [-1,1]){
+      const x=side*1.38;addRoundedPrism(shipRoot,x,1.07,4.28,1.12,1.75,.31,.15,colors.upholstery,.04);addRoundedPrism(shipRoot,x,1.39,3.55,1.10,.23,.59,.10,colors.upholstery,.04);addRoundedPrism(shipRoot,x,1.36,4.42,1.04,.88,.12,.08,colors.upholsteryLight,.025);
+      for(const z of [3.58,4.92])addBox(shipRoot,x,1.20,z,.09,.22,.12,colors.brushed);
+      boxObstacle(x,4.28,1.22,1.82);
+    }
+    addRoundedPrism(shipRoot,-.86,1.27,4.33,.74,1.12,.22,.09,colors.teakDark,.035);addBox(shipRoot,-.86,1.40,4.33,.70,1.08,.055,colors.teak,{castShadow:false});boxObstacle(-.86,4.33,.80,1.2);
+    // Cushions and small, non-blocking decorative vessels add a close-range finish.
+    addSphere(shipRoot,-1.30,1.58,3.87,.15,colors.cream,[1,.58,1.2],16);addSphere(shipRoot,1.38,1.58,4.61,.15,colors.cream,[1,.58,1.2],16);
+    addCylinderBetween(shipRoot,[-1.0,3.15,1.05],[-1.0,2.98,1.05],.035,colors.brass,10);addSphere(shipRoot,-1.0,2.94,1.05,.09,emissiveWarm,[1,1,1],12);
+    // Doorways and interactive points are linked to the actual walkable layout.
+    interactables.push({x:0,z:-5.16,r:1.55,title:'Navigation console',description:'A compact navigation station with simplified instrument panels and low-intensity display lighting. The screens are visual detail, not live marine navigation hardware.'});
+    interactables.push({x:-1.28,z:-1.72,r:1.35,title:'Private cabin',description:'Warm timber storage, an upholstered berth and a small side console establish a quieter, private space within the conceptual vessel.'});
+    interactables.push({x:-1.25,z:1.05,r:1.55,title:'Dining table',description:'The dining salon is furnished as a compact social space. The table and seating are procedural scene assets rather than a product catalogue.'});
+    interactables.push({x:-.86,z:4.25,r:1.5,title:'Main lounge',description:'The lounge opens toward the side glazing and uses a softer material palette than the exterior deck. From here, return through the aft doorway to the ocean.'});
+    interactables.push({x:-1.30,z:-1.80,r:1.45,title:'Cabin berth',description:'The private berth includes layered bedding and an upholstered mattress. Use this interaction to enter a short resting state, then wake to resume exploration.',action:'sleep'});
+    // Exterior seating: small, intentionally restrained silhouettes.
+    for(const side of [-1,1]){
+      addRoundedPrism(shipRoot,side*1.38,1.02,9.70,.82,1.4,.18,.14,colors.teakDark,.03);
+      addRoundedPrism(shipRoot,side*1.38,1.22,9.72,.74,1.28,.13,.12,colors.upholsteryLight,.025);
+      addRoundedPrism(shipRoot,side*1.38,1.44,10.22,.74,.20,.55,.08,colors.upholstery,.03);
+      boxObstacle(side*1.38,9.82,.9,1.55);
+    }
+    addRoundedPrism(shipRoot,0,1.12,11.2,.72,.72,.19,.12,colors.teak,.03);addCylinderBetween(shipRoot,[0,1.0,11.2],[0,1.12,11.2],.06,colors.brushed,8);boxObstacle(0,11.2,.85,.85);
+    // A small boarding plate marks the aft entry without blocking the doorway.
+    addBox(shipRoot,0,1.08,6.10,1.08,.035,.22,colors.brass,{castShadow:false});
+
+    // NON-DESTRUCTIVE DETAIL PASS — supplements the original vessel, furnishings and routes.
+    // Hull strakes follow the existing tapered profile; they are accents, not a fluid/CFD claim.
+    const hullStrakeDark=mat(0x203b47,.52,.24),hullStrakeSteel=mat(0x6c8388,.39,.48),hullPinstripe=mat(0xb39a70,.31,.56);
+    for(const side of [-1,1]){
+      const strakeA=[],strakeB=[],strakeC=[];
+      for(let z=-11.65;z<=11.65;z+=.22){const b=deckBeamAt(z);strakeA.push([side*b*.905,-.40,z]);strakeB.push([side*b*.785,-.83,z]);strakeC.push([side*b*.57,-1.30,z]);}
+      addTube(shipRoot,strakeA,.014,hullStrakeDark,150,5);addTube(shipRoot,strakeB,.018,hullStrakeSteel,150,5);addTube(shipRoot,strakeC,.012,hullPinstripe,150,5);
+      // Short, flush panel joints add scale without covering the painted hull with arbitrary grunge.
+      for(const z of [-8.25,-4.55,-.25,4.15,8.05]){
+        const b=deckBeamAt(z),joint=[[side*b*.965,-.12,z],[side*b*.925,-.34,z],[side*b*.865,-.55,z],[side*b*.815,-.72,z]];
+        addTube(shipRoot,joint,.009,hullStrakeDark,16,4);
+      }
+      // Fasteners around the existing hull ports; all remain attached to the curved side.
+      for(const z of [-8.8,-6.2,-3.6,-1.0,1.7,4.3,7.0,9.2]){
+        const b=deckBeamAt(z)*.985,sideX=side*(b+.03);
+        for(const [dy,dz] of [[.205,0],[-.205,0],[0,.205],[0,-.205]])addSphere(shipRoot,sideX,.24+dy,z+dz,.018,colors.brushed,[1,.92,1],8);
+      }
+      // Recessed glazing gaskets and a narrow central mullion refine the existing real glass bays.
+      for(const z of [-5.48,-4.20,-2.45,-1.25,.55,1.72,3.45,4.63]){
+        addBox(shipRoot,side*2.284,2.39,z,.024,.78,.026,colors.darkGlass,{castShadow:false,receiveShadow:false});
+        addBox(shipRoot,side*2.286,2.39,z-.455,.027,.76,.018,colors.brushed,{castShadow:false,receiveShadow:false});
+        addBox(shipRoot,side*2.286,2.39,z+.455,.027,.76,.018,colors.brushed,{castShadow:false,receiveShadow:false});
+      }
+      // A continuous interior baseboard visually connects wall panels and protects their lower edge.
+      addBox(shipRoot,side*2.105,1.075,0,.055,.13,12.32,colors.teakDark,{castShadow:false});
+      addBox(shipRoot,side*2.103,1.155,0,.06,.025,12.32,colors.brass,{castShadow:false});
+    }
+    // Roof-mounted solar glazing, fine cell dividers and small ventilation housings.
+    const solarMaterial=mat(0x102a3b,.24,.43),solarGrid=mat(0x71909b,.34,.47);
+    for(const x of [-.77,.77]){
+      addRoundedPrism(shipRoot,x,4.615,-2.55,.92,.82,.04,.055,solarMaterial,.008);
+      for(let c=1;c<4;c++)addBox(shipRoot,x-.46+c*.23,4.661,-2.55,.009,.004,.75,solarGrid,{castShadow:false,receiveShadow:false});
+      for(let r=1;r<4;r++)addBox(shipRoot,x,4.662,-2.55-.41+r*.205,.84,.004,.009,solarGrid,{castShadow:false,receiveShadow:false});
+      for(const sx of [-.44,.44])addBox(shipRoot,x+sx,4.657,-2.55,.018,.012,.79,colors.brushed,{castShadow:false,receiveShadow:false});
+    }
+    for(const x of [-1.40,1.40]){
+      addBox(shipRoot,x,4.675,-3.70,.30,.08,.46,colors.white);
+      for(let fin=0;fin<4;fin++)addBox(shipRoot,x,4.724,-3.87+fin*.105,.25,.012,.026,colors.brushed,{castShadow:false,receiveShadow:false});
+      addBox(shipRoot,x,4.70,-5.02,.18,.10,.21,emissiveWarm,{castShadow:false,receiveShadow:false});
+      addBox(shipRoot,x,4.755,-5.02,.20,.012,.23,colors.steel,{castShadow:false,receiveShadow:false});
+    }
+    // Small bow anchor housings and restrained anchor shanks follow the forward hull taper.
+    for(const side of [-1,1]){
+      const ax=side*deckBeamAt(-10.65)*.91;
+      addBox(shipRoot,ax,-.20,-10.65,.10,.38,.42,hullStrakeDark,{ry:side*.10});
+      const anchorRing=new THREE.Mesh(new THREE.TorusGeometry(.105,.018,6,16),colors.brushed);anchorRing.position.set(ax+side*.055,-.26,-10.72);anchorRing.rotation.y=side*Math.PI/2;shipRoot.add(anchorRing);
+      addCylinderBetween(shipRoot,[ax+side*.07,-.31,-10.72],[ax+side*.07,-.72,-10.86],.028,colors.brushed,8,.022);
+      addCylinderBetween(shipRoot,[ax+side*.07,-.60,-11.01],[ax+side*.07,-.60,-10.70],.024,colors.steel,8,.018);
+      addCylinderBetween(shipRoot,[ax+side*.07,-.68,-10.98],[ax+side*.07,-.76,-11.08],.025,colors.brushed,8,.012);
+      // Short linked-looking mooring chain from anchor eye to the hull shoe.
+      const chainPts=[];for(let i=0;i<=12;i++){const t=i/12;chainPts.push([ax+side*(.06+.035*Math.sin(t*Math.PI*4)),-.27-.065*t,-10.69-.28*t]);}addTube(shipRoot,chainPts,.012,colors.steel,32,5);
+    }
+    // Low-profile anti-slip pads on the exposed side walkways; the centre walkway stays clear.
+    const nonslipMat=mat(0x9aaba8,.84,.04);
+    for(const side of [-1,1])for(const z of [-3.8,-2.9,-2.0,-1.1,.0,.9,1.8,2.7,3.6]){
+      const x=side*2.74;addBox(shipRoot,x,.973,z,.48,.009,.12,nonslipMat,{castShadow:false,receiveShadow:false});
+    }
+    // Mooring cleat details and tidy rope coils close to the existing aft/bow bollards.
+    for(const [x,z] of [[-1.45,-11.25],[1.45,-11.25],[-1.10,11.70],[1.10,11.70]]){
+      addBox(shipRoot,x,1.00,z,.24,.045,.11,colors.brushed,{castShadow:false});
+      addCylinderBetween(shipRoot,[x-.09,1.02,z],[x+.09,1.02,z],.025,colors.steel,8,.022);
+      const ropePts=[];for(let i=0;i<=54;i++){const a=i/54*Math.PI*4.2;const radius=.105+.012*Math.sin(a*2);ropePts.push([x+Math.cos(a)*radius,1.008,z+Math.sin(a)*radius]);}addTube(shipRoot,ropePts,.018,colors.rubber,72,5);
+    }
+    // Reconstructed furniture details are additive; original seating, obstacles and access routes remain untouched.
+    const stitchMat=mat(0x7e8985,.9,.0),softPiping=mat(0xd1c6b1,.78,.0),furnitureFoot=mat(0x4c5b5d,.48,.42);
+    // Segmented lounge back cushions, raised throw pillows and piping on existing sofa bases.
+    for(const side of [-1,1]){
+      const sx=side*1.38;
+      for(const offset of [-.35,0,.35])addRoundedPrism(shipRoot,sx+offset,1.48,3.69,.315,.12,.43,.045,colors.upholsteryLight,.018);
+      addRoundedPrism(shipRoot,sx-.31,1.535,4.48,.30,.25,.20,.07,colors.cream,.025);
+      addRoundedPrism(shipRoot,sx+.28,1.535,4.56,.30,.25,.20,.07,colors.upholsteryLight,.025);
+      for(const xOff of [-.18,.18])addTube(shipRoot,[[sx+xOff,1.488,4.02],[sx+xOff,1.488,4.28],[sx+xOff,1.488,4.55],[sx+xOff,1.488,4.78]],.006,stitchMat,20,4);
+      for(const xOff of [-.40,.40])for(const zOff of [-.67,.67]){
+        addCylinderBetween(shipRoot,[sx+xOff,.985,4.28+zOff],[sx+xOff,1.105,4.28+zOff],.038,colors.teakDark,8,.028);
+        addCylinderBetween(shipRoot,[sx+xOff,1.025,4.28+zOff],[sx+xOff,1.075,4.28+zOff],.039,furnitureFoot,8,.031);
+      }
+    }
+    // Bed: separate pillow volumes, a folded throw and drawer pulls on the existing cabin furniture.
+    for(const x of [-1.59,-1.01]){
+      addRoundedPrism(shipRoot,x,1.605,-2.44,.50,.36,.07,.065,colors.cream,.02);
+      addTube(shipRoot,[[x-.19,1.676,-2.60],[x-.19,1.676,-2.48],[x-.19,1.676,-2.32]],.004,softPiping,12,4);
+    }
+    addRoundedPrism(shipRoot,-1.30,1.535,-1.20,1.12,.86,.035,.065,colors.upholsteryLight,.012);
+    addBox(shipRoot,-1.30,1.572,-1.20,1.02,.008,.015,softPiping,{castShadow:false,receiveShadow:false});
+    for(const z of [-2.20,-1.65]){
+      addBox(shipRoot,1.665,1.40,z,.018,.018,.17,colors.brushed,{castShadow:false,receiveShadow:false});
+      addSphere(shipRoot,1.681,1.40,z,.027,colors.brass,[.65,1,1],10);
+    }
+    addBox(shipRoot,1.664,1.22,-1.78,.02,.018,1.62,colors.brushed,{castShadow:false,receiveShadow:false});
+    // Dining chair legs, cross rails and fine tabletop hardware; clear floor route is preserved.
+    for(const [cx,cz] of [[-1.25,.02],[-1.25,2.08],[-2.00,1.05]]){
+      for(const dx of [-.205,.205])for(const dz of [-.19,.19]){
+        const lx=cx+dx,lz=cz+dz;addCylinderBetween(shipRoot,[lx,.982,lz],[lx,1.105,lz],.024,colors.brushed,7,.018);
+      }
+      addBox(shipRoot,cx,1.075,cz-.18,.39,.022,.025,colors.brushed,{castShadow:false,receiveShadow:false});
+    }
+    for(const [x,z] of [[-1.71,.60],[-.83,.60],[-1.71,1.50],[-.83,1.50]])addSphere(shipRoot,x,1.675,z,.014,colors.brass,[1,.55,1],8);
+    // A restrained table setting adds scale to the dining salon without making it cluttered.
+    const ceramic=mat(0xe4dfd1,.24,.04),cupGlass=new THREE.MeshPhysicalMaterial({color:0xb6ced0,roughness:.12,metalness:.02,transparent:true,opacity:.42,side:THREE.DoubleSide,depthWrite:false});
+    const saucer=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.014,24),ceramic);saucer.position.set(-1.48,1.684,1.10);saucer.castShadow=true;shipRoot.add(saucer);
+    const cup=new THREE.Mesh(new THREE.CylinderGeometry(.043,.034,.09,20,1,true),cupGlass);cup.position.set(-1.48,1.735,1.10);shipRoot.add(cup);
+    const cupRim=new THREE.Mesh(new THREE.TorusGeometry(.041,.004,6,18),colors.brushed);cupRim.position.set(-1.48,1.781,1.10);shipRoot.add(cupRim);
+    addSphere(shipRoot,-1.03,1.708,.83,.105,colors.brass,[1,.36,1],16);
+    // Console: a small helm wheel, throttles, bezel screws and a raised chart tray.
+    const helmWheel=new THREE.Mesh(new THREE.TorusGeometry(.205,.022,8,28),colors.brushed);helmWheel.position.set(1.13,2.12,-5.22);shipRoot.add(helmWheel);
+    // Captain's chair, placed off the centerline so the bridge passage and console stay accessible.
+    addRoundedPrism(shipRoot,-1.20,1.16,-4.72,.74,.76,.22,.10,colors.upholstery,.035);
+    addBox(shipRoot,-1.20,1.56,-4.35,.74,.54,.13,colors.upholstery,{castShadow:true,receiveShadow:true});
+    for(const cx of [-1.48,-.92]){addBox(shipRoot,cx,1.27,-4.73,.07,.40,.07,colors.brushed);addBox(shipRoot,cx,1.43,-4.73,.12,.06,.38,colors.teakDark);addCylinderBetween(shipRoot,[cx,1.00,-4.96],[cx,1.14,-4.96],.023,colors.brushed,7);addCylinderBetween(shipRoot,[cx,1.00,-4.48],[cx,1.14,-4.48],.023,colors.brushed,7);}
+    addCylinderBetween(shipRoot,[1.13,1.91,-5.22],[1.13,2.12,-5.22],.035,colors.brushed,10);
+    for(let i=0;i<6;i++){const a=i*Math.PI/3;addCylinderBetween(shipRoot,[1.13,2.12,-5.22],[1.13+Math.cos(a)*.18,2.12+Math.sin(a)*.18,-5.22],.008,colors.brushed,5,.008);}
+    for(const x of [.92,1.14,1.36]){
+      addBox(shipRoot,x,1.92,-5.35,.055,.05,.08,colors.brass,{castShadow:false});
+      addCylinderBetween(shipRoot,[x,1.95,-5.35],[x,2.08,-5.37],.012,colors.brushed,6,.009);
+      addSphere(shipRoot,x,2.085,-5.37,.021,emissiveWarm,[1,1,1],8);
+    }
+    addBox(shipRoot,.96,1.88,-5.02,.47,.035,.26,colors.teakDark,{castShadow:false});
+    addBox(shipRoot,.96,1.903,-5.02,.40,.008,.19,colors.screen,{castShadow:false,receiveShadow:false});
+    // Small, warm metal-rimmed deck lamps and framed ceiling downlights.
+    for(const side of [-1,1])for(const z of [-5.1,-2.0,.95,3.9]){
+      const trim=new THREE.Mesh(new THREE.CylinderGeometry(.075,.09,.026,16),colors.brushed);trim.position.set(side*1.86,3.51,z);shipRoot.add(trim);
+      const diffuser=new THREE.Mesh(new THREE.CircleGeometry(.066,18),emissiveWarm);diffuser.position.set(side*1.86,3.496,z);diffuser.rotation.x=-Math.PI/2;shipRoot.add(diffuser);
+    }
+
+    // Collision is handled in the horizontal plane against wall spans and furniture bounds.
+    function inCabinStructure(x,z) { return Math.abs(x)<2.36 && z>cabinFront-.10 && z<cabinBack+.10; }
+    function collidesFurniture(x,z) { for(const b of obstacleBoxes){if(x>b.minX-.18&&x<b.maxX+.18&&z>b.minZ-.18&&z<b.maxZ+.18)return true;}return false; }
+    function interiorWallCollision(x,z,oldX,oldZ) {
+      if(x<cabinMinX+.16||x>cabinMaxX-.16||z<cabinFront+.17||(z>cabinBack-.16&&Math.abs(x)>.66))return true;
+      for(const w of partitions){const crossed=(oldZ<w&&z>=w)||(oldZ>w&&z<=w);if((crossed||Math.abs(z-w)<.12)&&Math.abs(x)>.69)return true;}
+      // Furniture is represented as collision boxes; keep the central corridor open.
+      if(collidesFurniture(x,z))return true;
+      return false;
+    }
+    function tryMove(nx,nz) {
+      const ox=player.x,oz=player.z;
+      if(worldMode==='interior'){
+        let x=nx,z=nz;
+        if(interiorWallCollision(x,oz,ox,oz))x=ox;
+        if(interiorWallCollision(x,z,ox,oz))z=oz;
+        // The aft doorway is a real passage from the lounge to the deck.
+        if(z>6.35 && Math.abs(x)<.66){worldMode='exterior';player.z=6.78;player.x=x;showToast('BACK ON DECK · OCEAN ACCESS RESTORED');return;}
+        player.x=x;player.z=z;
+      } else {
+        let x=nx,z=nz;
+        z=THREE.MathUtils.clamp(z,-13.0,12.65);
+        const width=deckBeamAt(z)-.34;
+        x=THREE.MathUtils.clamp(x,-Math.max(.3,width),Math.max(.3,width));
+        const entryCorridor=Math.abs(x)<.66 && z>5.80 && z<6.85;
+        if(inCabinStructure(x,z)&&!entryCorridor){x=ox;if(inCabinStructure(x,z)&&!entryCorridor)z=oz;}
+        if(collidesFurniture(x,z)){x=ox;if(collidesFurniture(x,z))z=oz;}
+        player.x=x;player.z=z;
+        if(player.z<6.34&&Math.abs(player.x)<.66&&player.z>5.8){worldMode='interior';showToast('ENTERED THE VESSEL · MAIN LOUNGE');}
+      }
+    }
+    function roomAt(z) { if(z < -3.32)return 'bridge';if(z < -.52)return 'cabin';if(z < 2.48)return 'dining';return 'lounge'; }
+    function enterRoom(room, showMessage=true) {
+      if(driveState.active)exitDriving(false);if(isSleeping){isSleeping=false;sleepTransition=null;sleepPose=null;$('#sleepOverlay').classList.remove('visible');}
+      const def=roomDefs[room]||roomDefs.lounge;cameraMode='walk';worldMode='interior';player.x=0;player.z=def.z;yaw=0;pitch=-.02;manuallyControlled=true;started=true;$('#intro').classList.add('hidden');
+      updateInterface();if(showMessage)showToast('ENTERED · '+def.title.toUpperCase());
+    }
+    function startExterior() { if(driveState.active)exitDriving(false);if(isSleeping){isSleeping=false;sleepTransition=null;sleepPose=null;$('#sleepOverlay').classList.remove('visible');}cameraMode='walk';worldMode='exterior';player.x=0;player.z=10.25;yaw=0;pitch=-.02;started=true;manuallyControlled=true;$('#intro').classList.add('hidden');updateInterface();showToast('AFT DECK · CLICK THE SCENE TO LOOK AROUND'); }
+    function switchMode(mode) {
+      if(driveState.active)exitDriving(false);if(isSleeping){isSleeping=false;sleepTransition=null;sleepPose=null;$('#sleepOverlay').classList.remove('visible');}cameraMode=mode;
+      if(mode==='walk'&&!started)startExterior();
+      if(mode==='cinematic'){manuallyControlled=false;cinematicTime=0;}
+      if(mode==='orbit'){
+        manuallyControlled=true;
+        const offset=new THREE.Vector3().subVectors(camera.position,new THREE.Vector3(shipRoot.position.x,shipRoot.position.y+1.75,shipRoot.position.z));
+        orbitRadius=THREE.MathUtils.clamp(offset.length(),16,75);orbitTheta=Math.atan2(offset.x,offset.z);orbitPhi=Math.asin(THREE.MathUtils.clamp(offset.y/Math.max(1,offset.length()),.08,.8));
+      }
+      updateInterface();
+    }
+    function updateInterface() {
+      $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.action===(cameraMode==='walk'?(worldMode==='interior'?'interior':'walkExterior'):cameraMode)));
+      $('#hud').classList.toggle('visible',cameraMode==='walk');$('#intro').classList.toggle('hidden',started);$('#bottomline').style.opacity=(cameraMode==='walk'||cameraMode==='drive'||cameraMode==='sleep'?'0':'1');$('#bottomline').style.transition='opacity .2s';
+      $('#statusMode').textContent=cameraMode==='walk'?(worldMode==='interior'?'INTERIOR WALKTHROUGH':'EXTERIOR WALKTHROUGH'):cameraMode==='drive'?'SHIP DRIVING':cameraMode==='sleep'?'RESTING':cameraMode==='orbit'?'FREE ORBIT':'CINEMATIC VIEW';
+      $('#roomNav').style.display=(cameraMode==='walk'&&worldMode==='interior')?'grid':'none';$('#mobilePad').style.display=(cameraMode==='walk'&&isTouchDevice)?'grid':'none';$('#touchLook').style.display=(cameraMode==='walk'&&isTouchDevice)?'block':'none';$('#returnDeckButton').style.display=(cameraMode==='walk'&&worldMode==='interior')?'inline-flex':'none';
+      $('#driveTrigger').style.display=(cameraMode==='walk'&&worldMode==='interior'&&roomAt(player.z)==='bridge')?'inline-flex':'none';
+      $('#sleepOverlay').classList.toggle('visible',cameraMode==='sleep');$('#sleepOverlay').setAttribute('aria-hidden',String(cameraMode!=='sleep'));
+      updateDriveUI();setQualityReadout();
+    }
+    function setRoomHud() {
+      if(cameraMode!=='walk')return;
+      const room=worldMode==='interior'?roomAt(player.z):null;
+      $('#hudZone').textContent=worldMode==='interior'?'INTERIOR WALKTHROUGH':'EXTERIOR WALKTHROUGH';
+      $('#hudRoom').textContent=worldMode==='interior'?roomDefs[room].title:'Aft deck';
+      $('#hudHint').textContent=worldMode==='interior'?'Walk through the connected rooms, or follow the doorway behind you back to deck.':'Explore the deck perimeter. The central aft doorway leads into the main lounge.';
+      $$('#roomNav button').forEach(b=>b.classList.toggle('active',b.dataset.room===room));
+      const found=worldMode==='interior'?interactables.reduce((best,o)=>{const d=Math.hypot(player.x-o.x,player.z-o.z);if(d>=o.r)return best;if(o.action==='sleep'&&best?.object?.action!=='sleep')return {object:o,distance:d};if(best?.object?.action==='sleep')return best;return !best||d<best.distance?{object:o,distance:d}:best;},null)?.object||null:null;
+      $('#interactButton').classList.toggle('visible',!!found);
+      if(found){$('#interactButton').textContent=found.action==='sleep'?'E · SLEEP':'E · INSPECT '+found.title.toUpperCase();currentInteraction=found;}else currentInteraction=null;
+    }
+    let currentInteraction=null;
+    function showToast(message) { const toast=$('#toast');toast.textContent=message;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2400); }
+    function showInfo(title,description,eyebrow='VESSEL NOTES',withLink=false) { $('#infoTitle').textContent=title;$('#infoText').textContent=description;$('#infoEyebrow').textContent=eyebrow;$('#infoLink').style.display=withLink?'inline-block':'none';$('#infoPanel').classList.add('open'); }
+    function closeInfo() { $('#infoPanel').classList.remove('open'); }
+    function interact() { if(currentInteraction?.action==='sleep'){startSleep();return;}if(currentInteraction)showInfo(currentInteraction.title,currentInteraction.description,'INTERACTIVE FIELD NOTE');else showToast('MOVE CLOSER TO AN INTERACTIVE OBJECT'); }
+    function teleportRoom(room) { if(roomDefs[room])enterRoom(room); }
+
+    // One shared canvas texture makes subtle teak grain without external assets.
+    function makeWoodTexture(THREE) {
+      const size=1024,c=document.createElement('canvas');c.width=size;c.height=size;const ctx=c.getContext('2d');
+      ctx.fillStyle='#987653';ctx.fillRect(0,0,size,size);
+      let seed=93481;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+      const plankH=128;
+      for(let y=0;y<size;y+=plankH){
+        const base=['#876444','#9c7955','#a17e59','#8e6c4c'][Math.floor(rand()*4)];ctx.fillStyle=base;ctx.fillRect(0,y,size,plankH-2);
+        ctx.fillStyle='rgba(44,29,18,.48)';ctx.fillRect(0,y+plankH-2,size,2);
+        for(let n=0;n<230;n++){
+          const yy=y+rand()*(plankH-4),x=rand()*size,len=18+rand()*330;
+          ctx.strokeStyle=`rgba(${34+Math.floor(rand()*45)},${23+Math.floor(rand()*30)},${14+Math.floor(rand()*22)},${.018+rand()*.105})`;
+          ctx.lineWidth=.35+rand()*1.5;ctx.beginPath();ctx.moveTo(x,yy);ctx.bezierCurveTo(x+len*.24,yy+(rand()-.5)*5,x+len*.72,yy+(rand()-.5)*3,x+len,yy+(rand()-.5)*2);ctx.stroke();
+        }
+        // A restrained number of elongated, low-contrast grain knots.
+        for(let k=0;k<2;k++){const x=40+rand()*(size-80),ky=y+24+rand()*(plankH-48);ctx.strokeStyle='rgba(56,35,20,.12)';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(x,ky,7+rand()*15,1.2+rand()*2,rand()*.18,0,Math.PI*2);ctx.stroke();}
+      }
+      for(let i=0;i<54;i++){const x=rand()*size;ctx.fillStyle='rgba(25,18,13,.12)';ctx.fillRect(x,0,.5+rand()*1.1,size);}
+      const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;t.repeat.set(1.0,2.5);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t;
+    }
+    function makeReliefTexture(THREE,type='fabric') {
+      const size=512,c=document.createElement('canvas');c.width=size;c.height=size;const ctx=c.getContext('2d');
+      ctx.fillStyle='rgb(128,128,128)';ctx.fillRect(0,0,size,size);
+      let seed=type==='fabric'?771:type==='wood'?923:415;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+      if(type==='fabric'){
+        for(let p=0;p<size;p+=4){ctx.strokeStyle=(p%8===0)?'rgba(245,245,245,.24)':'rgba(35,35,35,.18)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p,0);ctx.lineTo(p,size);ctx.stroke();ctx.beginPath();ctx.moveTo(0,p);ctx.lineTo(size,p);ctx.stroke();}
+        for(let i=0;i<2300;i++){const v=rand()>.5?`rgba(244,244,244,${.04+rand()*.12})`:`rgba(30,30,30,${.025+rand()*.10})`;ctx.fillStyle=v;ctx.fillRect(rand()*size,rand()*size,1+rand()*2,1+rand()*2);}
+      }else if(type==='wood'){
+        for(let i=0;i<820;i++){const y=rand()*size,x=rand()*size,len=25+rand()*280;ctx.strokeStyle=rand()>.5?'rgba(238,238,238,.18)':'rgba(30,30,30,.16)';ctx.lineWidth=.4+rand()*1.3;ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x+len*.3,y+(rand()-.5)*2,x+len*.7,y+(rand()-.5)*2,x+len,y);ctx.stroke();}
+      }else{
+        for(let p=-size;p<size*2;p+=7){ctx.strokeStyle=(p%14===0)?'rgba(245,245,245,.22)':'rgba(30,30,30,.16)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p,0);ctx.lineTo(p-size,size);ctx.stroke();}
+        for(let i=0;i<1000;i++){ctx.fillStyle=rand()>.5?'rgba(242,242,242,.11)':'rgba(22,22,22,.09)';ctx.fillRect(rand()*size,rand()*size,1,1);}
+      }
+      const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;t.repeat.set(type==='fabric'?4:2,type==='fabric'?4:3);t.anisotropy=4;return t;
+    }
+    function createLabelTexture(THREE, headline, subline) {
+      const c=document.createElement('canvas');c.width=900;c.height=150;const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='rgba(238,235,219,.94)';ctx.font='600 44px Georgia,serif';ctx.letterSpacing='6px';ctx.fillText(headline,22,62);ctx.fillStyle='rgba(238,235,219,.65)';ctx.font='18px sans-serif';ctx.letterSpacing='7px';ctx.fillText(subline,25,104);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;
+    }
+    function buildEnvironmentTexture(presetKey) {
+      const p=presets[presetKey],c=document.createElement('canvas');c.width=1024;c.height=512;const ctx=c.getContext('2d');
+      const grad=ctx.createLinearGradient(0,0,0,512);grad.addColorStop(0,p.skyTop);grad.addColorStop(.46,p.skyHorizon);grad.addColorStop(.70,p.skyHorizon);grad.addColorStop(1,p.water);ctx.fillStyle=grad;ctx.fillRect(0,0,1024,512);
+      const sx=420,sy=210;const glow=ctx.createRadialGradient(sx,sy,2,sx,sy,170);glow.addColorStop(0,p.sun+'bb');glow.addColorStop(.18,p.sun+'55');glow.addColorStop(1,p.sun+'00');ctx.fillStyle=glow;ctx.fillRect(sx-180,sy-180,360,360);
+      // Restrained, deterministic cloud streaks contribute to the environment map only.
+      let seed=518;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+      for(let i=0;i<280;i++){const y=180+rand()*145,x=rand()*1024,w=25+rand()*155;ctx.strokeStyle=`rgba(245,246,240,${.012+rand()*p.cloud*.085})`;ctx.lineWidth=.5+rand()*4;ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x+w*.25,y-5-rand()*8,x+w*.65,y+3-rand()*4,x+w,y-2);ctx.stroke();}
+      const t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;return t;
+    }
+    function applyEnvironment(key, initial=false) {
+      if(!presets[key])return;const p=presets[key];currentPreset=key;
+      const target={sunColor:new THREE.Color(p.sun),waterColor:new THREE.Color(p.water),skyTop:new THREE.Color(p.skyTop),horizon:new THREE.Color(p.skyHorizon),sunDir:new THREE.Vector3(...p.sunDir).normalize(),hemiSky:new THREE.Color(p.hemiSky),hemiGround:new THREE.Color(p.hemiGround),fog:new THREE.Color(p.fog),sunIntensity:p.sunIntensity,hemiIntensity:p.hemiIntensity,exposure:p.exposure,envIntensity:p.envIntensity,wind:p.wind,cloud:p.cloud};
+      if(initial){applyTarget(target);}
+      else {transition={start:performance.now(),duration:1800,from:{sunColor:sunLight.color.clone(),waterColor:waterUniforms.uWaterColor.value.clone(),skyTop:skyUniforms.uSkyTop.value.clone(),horizon:waterUniforms.uHorizon.value.clone(),sunDir:waterUniforms.uSunDir.value.clone(),hemiSky:hemisphere.color.clone(),hemiGround:hemisphere.groundColor.clone(),fog:scene.fog.color.clone(),sunIntensity:sunLight.intensity,hemiIntensity:hemisphere.intensity,exposure:renderer.toneMappingExposure,envIntensity:scene.environmentIntensity??.8,wind:waterUniforms.uWind.value,cloud:skyUniforms.uCloud.value},to:target};}
+      if(scene.environment)scene.environment.dispose();scene.environment=buildEnvironmentTexture(key);scene.environmentIntensity=p.envIntensity;
+      sunLight.castShadow=(key!=='overcast');
+      $('#bottomEnvironment').textContent=p.label;$$('[data-env]').forEach(b=>b.classList.toggle('active',b.dataset.env===key));
+    }
+    function applyTarget(t) {sunLight.color.copy(t.sunColor);sunLight.intensity=t.sunIntensity;sunLight.position.copy(t.sunDir).multiplyScalar(100);hemisphere.color.copy(t.hemiSky);hemisphere.groundColor.copy(t.hemiGround);hemisphere.intensity=t.hemiIntensity;scene.fog.color.copy(t.fog);renderer.toneMappingExposure=t.exposure;skyUniforms.uSkyTop.value.copy(t.skyTop);skyUniforms.uHorizon.value.copy(t.horizon);skyUniforms.uSunDir.value.copy(t.sunDir);skyUniforms.uSunColor.value.copy(t.sunColor);skyUniforms.uSunIntensity.value=t.sunIntensity/2.3;skyUniforms.uCloud.value=t.cloud;waterUniforms.uSunDir.value.copy(t.sunDir);waterUniforms.uSunColor.value.copy(t.sunColor);waterUniforms.uWaterColor.value.copy(t.waterColor);waterUniforms.uHorizon.value.copy(t.horizon);waterUniforms.uSkyTop.value.copy(t.skyTop);waterUniforms.uSunPower.value=t.sunIntensity/2.4;waterUniforms.uWind.value=t.wind;}
+    applyEnvironment('clear',true);
+
+    // The top panel is decorative only; PBR materials use a procedural equirectangular environment.
+    const qualityProfiles={low:{pixel:.68,max:1.0,shadow:512,exposure:1.04,desc:'Reduced render scale and small shadow map; simplified rendering cost.'},medium:{pixel:.92,max:1.25,shadow:1024,exposure:1.05,desc:'Balanced render scale and shadow quality for general-purpose hardware.'},high:{pixel:1.0,max:1.65,shadow:1536,exposure:1.05,desc:'Higher render scale and sharper shadow mapping where hardware permits.'},ultra:{pixel:1.0,max:2.0,shadow:2048,exposure:1.05,desc:'Highest practical profile exposed by this build; still constrained by device and display.'}};
+    function applyQuality(key,automatic=false) {
+      if(key==='auto'){autoQuality=true;key=(isTouchDevice||lowHardware)?'medium':'high';}
+      else {if(!automatic)autoQuality=false;}
+      if(!qualityProfiles[key])return;qualityMode=key;const q=qualityProfiles[key];const dpr=Math.max(1,window.devicePixelRatio||1);renderer.setPixelRatio(Math.min(dpr*q.pixel,q.max));renderer.setSize(window.innerWidth,window.innerHeight,false);renderer.toneMappingExposure=q.exposure;
+      sunLight.shadow.mapSize.set(q.shadow,q.shadow);if(sunLight.shadow.map){sunLight.shadow.map.dispose();sunLight.shadow.map=null;}sunLight.shadow.needsUpdate=true;
+      $('#qualityDescription').textContent=q.desc;$('#qualityDetail').textContent=key.toUpperCase()+' PROFILE';$$('[data-quality]').forEach(b=>b.classList.toggle('active',b.dataset.quality===(autoQuality?'auto':key)));setQualityReadout();
+      if(!automatic)showToast('GRAPHICS PROFILE · '+key.toUpperCase());
+    }
+    function setQualityReadout(){const label=qualityMode.toUpperCase()+' QUALITY';$('#bottomQuality').textContent=label;$('#renderInfo').textContent=`Procedural ocean shader · PBR vessel materials · ${qualityMode} render profile · shadow-mapped directional light. No remote model or video assets required.`;}
+    applyQuality(qualityMode,true);
+
+    // Optional, interaction-gated generated ocean ambience; no missing sound files.
+    let audioContext=null, masterGain=null, audioSources=[];let soundOn=false;
+    function startAudio() {
+      const AC=window.AudioContext||window.webkitAudioContext;if(!AC){showToast('AUDIO IS NOT SUPPORTED BY THIS BROWSER');return false;}
+      try{
+        if(!audioContext){audioContext=new AC();masterGain=audioContext.createGain();masterGain.gain.value=(Number($('#volumeSlider').value)/100)*.20;masterGain.connect(audioContext.destination);
+          const buffer=audioContext.createBuffer(1,audioContext.sampleRate*3,audioContext.sampleRate);const data=buffer.getChannelData(0);let v=0;for(let i=0;i<data.length;i++){v=v*.97+(Math.random()*2-1)*.03;data[i]=v*7;}
+          const source=audioContext.createBufferSource();source.buffer=buffer;source.loop=true;const low=audioContext.createBiquadFilter();low.type='lowpass';low.frequency.value=520;low.Q.value=.45;const gain=audioContext.createGain();gain.gain.value=.78;source.connect(low);low.connect(gain);gain.connect(masterGain);source.start();audioSources.push(source);
+          const wind=audioContext.createBiquadFilter();wind.type='bandpass';wind.frequency.value=620;wind.Q.value=.4;const windSource=audioContext.createBufferSource();windSource.buffer=buffer;windSource.loop=true;const windGain=audioContext.createGain();windGain.gain.value=.11;windSource.connect(wind);wind.connect(windGain);windGain.connect(masterGain);windSource.start();audioSources.push(windSource);
+        }
+        audioContext.resume();soundOn=true;masterGain.gain.setTargetAtTime((Number($('#volumeSlider').value)/100)*.20,audioContext.currentTime,.18);updateSoundUI();return true;
+      }catch(e){console.warn(e);showToast('COULD NOT START THE AUDIO CONTEXT');return false;}
+    }
+    function toggleSound(){if(soundOn){soundOn=false;if(masterGain&&audioContext)masterGain.gain.setTargetAtTime(0,audioContext.currentTime,.15);updateSoundUI();}else startAudio();}
+    function updateSoundUI(){ $('#soundDot').classList.toggle('on',soundOn);$('#soundLabel').textContent=soundOn?'SOUND ON':'SOUND OFF';$('#audioState').textContent=soundOn?'ON':'OFF';$('#soundDrawerButton').textContent=soundOn?'MUTE SOUND ↗':'ENABLE SOUND ↗'; }
+    $('#volumeSlider').addEventListener('input',()=>{if(masterGain&&audioContext&&soundOn)masterGain.gain.setTargetAtTime((Number($('#volumeSlider').value)/100)*.20,audioContext.currentTime,.08);});
+
+    // Functional arcade-style marine transmission. Speed is simulated in metres/second;
+    // dashboard knots are derived from that state, not decorative counters.
+    const forwardGearCaps={ '1':1.5, '2':3.0, '3':5.0, '4':7.2, '5':9.5, 'R':2.35, 'N':0 };
+    const moveToward=(value,target,maxDelta)=>Math.abs(target-value)<=maxDelta?target:value+Math.sign(target-value)*maxDelta;
+    function selectGear(gear){
+      if(!Object.prototype.hasOwnProperty.call(forwardGearCaps,gear))return;
+      driveState.gear=gear;driveState.stopRequested=false;updateDriveUI();showToast(gear==='R'?'REVERSE SELECTED · APPLY THROTTLE TO MOVE ASTERN':gear==='N'?'NEUTRAL · PROPULSION DISENGAGED':'FORWARD GEAR '+gear+' SELECTED');
+    }
+    function engageStop(){driveState.stopRequested=true;driveInputs.throttle=false;keys.delete('KeyW');keys.delete('ArrowUp');updateDriveUI();showToast('STOP REQUESTED · CONTROLLED DECELERATION');}
+    function setDriveHold(kind,active){if(!(kind in driveInputs))return;driveInputs[kind]=!!active;if(active&&kind==='throttle')driveState.stopRequested=false;}
+    function updateDrive(dt){
+      if(!driveState.active&&Math.abs(driveState.speed)<.002&&!driveState.stopRequested)return;
+      const throttle=driveState.active&&(keys.has('KeyW')||keys.has('ArrowUp')||driveInputs.throttle);
+      const brakeHeld=driveState.active&&(keys.has('KeyS')||keys.has('ArrowDown')||keys.has('Space')||driveInputs.brake);
+      const left=driveState.active&&(keys.has('KeyA')||keys.has('ArrowLeft')||driveInputs.left);
+      const right=driveState.active&&(keys.has('KeyD')||keys.has('ArrowRight')||driveInputs.right);
+      if(throttle)driveState.stopRequested=false;
+      const hardStop=driveState.stopRequested||brakeHeld;
+      let target=0;
+      if(throttle&&!hardStop){if(driveState.gear==='R')target=-forwardGearCaps.R;else if(driveState.gear!=='N')target=forwardGearCaps[driveState.gear]||0;}
+      if(hardStop){driveState.speed=moveToward(driveState.speed,0,3.25*dt);}
+      else if(target!==0){const reversingThroughZero=driveState.speed*target<0;driveState.speed=moveToward(driveState.speed,target,(reversingThroughZero?1.05:1.28)*dt);}
+      else {const coastDrag=(driveState.active&&driveState.gear==='N'?.09:.18)+Math.abs(driveState.speed)*.028;driveState.speed=moveToward(driveState.speed,0,coastDrag*dt);}
+      if(Math.abs(driveState.speed)<.012){driveState.speed=0;if(driveState.stopRequested)driveState.motion='STATIONARY';}
+      const steering=(left?1:0)-(right?1:0);driveState.steering=steering;
+      const speedFactor=.16+.84*THREE.MathUtils.clamp(Math.abs(driveState.speed)/4.5,0,1);
+      if(steering&&Math.abs(driveState.speed)>.035)driveState.heading+=steering*.34*speedFactor*dt;
+      driveState.heading=((driveState.heading%(Math.PI*2))+Math.PI*2)%(Math.PI*2);shipRoot.rotation.y=driveState.heading;
+      if(Math.abs(driveState.speed)>0){const nextX=shipRoot.position.x-Math.sin(driveState.heading)*driveState.speed*dt;const nextZ=shipRoot.position.z-Math.cos(driveState.heading)*driveState.speed*dt;
+        shipRoot.position.x=THREE.MathUtils.clamp(nextX,-430,430);shipRoot.position.z=THREE.MathUtils.clamp(nextZ,-430,430);
+        if(shipRoot.position.x!==nextX||shipRoot.position.z!==nextZ){driveState.speed=0;driveState.stopRequested=true;showToast('OCEAN DEMONSTRATION BOUNDARY REACHED · VESSEL STOPPED');}
+      }
+      if(typeof helmWheel!=='undefined')helmWheel.rotation.z=THREE.MathUtils.damp(helmWheel.rotation.z,steering*.48,5,dt);
+      if(hardStop&&Math.abs(driveState.speed)<.012)driveState.motion='STATIONARY';
+      else if(hardStop)driveState.motion='DECELERATING';else if(throttle&&driveState.speed!==0)driveState.motion=driveState.gear==='R'?'REVERSING':(Math.abs(driveState.speed)<(forwardGearCaps[driveState.gear]||9.5)-.3?'ACCELERATING':'UNDERWAY');else if(Math.abs(driveState.speed)>.08)driveState.motion='COASTING';else driveState.motion=driveState.gear==='N'?'NEUTRAL':'IDLE';
+      if(!driveState.active&&driveState.speed===0&&driveState.stopRequested){driveState.stopRequested=false;updateDriveUI();return;}
+      driveState.uiClock+=dt;if(driveState.uiClock>.12){driveState.uiClock=0;updateDriveUI();}
+    }
+    function updateDriveUI(){
+      const panel=$('#drivePanel');if(!panel)return;
+      $('#driveSpeed').textContent=(Math.abs(driveState.speed)*ktsPerMps).toFixed(1);
+      const deg=((360-(driveState.heading*180/Math.PI)%360)+360)%360;$('#driveHeading').textContent=String(Math.round(deg)%360).padStart(3,'0')+'°';
+      $('#driveGearReadout').textContent=driveState.gear;
+      $('#drivePropulsion').textContent=driveState.gear==='N'?'Neutral':driveState.gear==='R'?'Reverse':`Forward ${driveState.gear}`;
+      $('#driveLiveState').textContent=driveState.motion;
+      $$('[data-gear]').forEach(b=>b.classList.toggle('active',b.dataset.gear===driveState.gear));
+      $('#drivePanel').classList.toggle('visible',driveState.active);$('#drivePanel').setAttribute('aria-hidden',String(!driveState.active));
+    }
+    function startDriving(){
+      if(isSleeping){showToast('WAKE UP BEFORE TAKING THE HELM');return;}
+      if(driveState.active)return;
+      if(document.pointerLockElement===canvas)document.exitPointerLock?.();keys.clear();driveInputs.throttle=driveInputs.left=driveInputs.right=driveInputs.brake=false;
+      driveState.active=true;driveState.heading=shipRoot.rotation.y;driveState.view='cockpit';driveState.motion=driveState.speed===0?'STATIONARY':'UNDERWAY';
+      worldMode='interior';player.x=0;player.z=-4.52;yaw=0;pitch=-.02;cameraMode='drive';started=true;manuallyControlled=true;$('#intro').classList.add('hidden');closeInfo();
+      updateInterface();updateDriveUI();showToast('HELM ACTIVE · W/↑ THROTTLE · A/D STEER · 1–5 / R / N');
+    }
+    function exitDriving(notify=true){
+      if(!driveState.active)return;
+      driveState.active=false;driveState.stopRequested=true;driveInputs.throttle=driveInputs.left=driveInputs.right=driveInputs.brake=false;keys.clear();
+      worldMode='interior';player.x=0;player.z=-4.45;yaw=0;pitch=-.02;cameraMode='walk';manuallyControlled=true;
+      updateInterface();updateDriveUI();if(notify)showToast('HELM RELEASED · VESSEL DECELERATING UNDER SIMULATED DRAG');
+    }
+    function switchDriveCamera(){if(!driveState.active)return;driveState.view=driveState.view==='cockpit'?'chase':'cockpit';updateDriveUI();showToast(driveState.view==='chase'?'EXTERNAL CHASE CAMERA':'CAPTAIN’S COCKPIT VIEW');}
+    let sleepPose=null;
+    function startSleep(){
+      if(cameraMode!=='walk'||worldMode!=='interior'||currentInteraction?.action!=='sleep'){showToast('APPROACH THE CABIN BED TO REST');return;}
+      if(driveState.active||isSleeping)return;
+      if(document.pointerLockElement===canvas)document.exitPointerLock?.();keys.clear();driveInputs.throttle=driveInputs.left=driveInputs.right=driveInputs.brake=false;isSleeping=true;const fromPos=camera.position.clone(),fromQuat=camera.quaternion.clone();
+      const targetPos=shipRoot.localToWorld(new THREE.Vector3(-1.28,1.64,-1.86));
+      const lookAt=shipRoot.localToWorld(new THREE.Vector3(-1.24,3.45,-1.60));
+      const targetCamera=new THREE.PerspectiveCamera(camera.fov,camera.aspect,camera.near,camera.far);targetCamera.position.copy(targetPos);targetCamera.lookAt(lookAt);
+      sleepPose={position:targetPos.clone(),quaternion:targetCamera.quaternion.clone()};sleepTransition={fromPos,fromQuat,targetPos:targetPos.clone(),targetQuat:targetCamera.quaternion.clone(),elapsed:0,duration:1.25};
+      cameraMode='sleep';$('#sleepOverlay').classList.add('visible');$('#sleepOverlay').setAttribute('aria-hidden','false');updateInterface();showToast('REST MODE · PRESS E OR ESCAPE TO WAKE');
+    }
+    function wakeUp(){
+      if(!isSleeping||cameraMode!=='sleep')return;
+      const fromPos=camera.position.clone(),fromQuaternion=camera.quaternion.clone();keys.clear();isSleeping=false;sleepTransition=null;sleepPose=null;
+      player.x=-.38;player.z=-1.80;yaw=0;pitch=-.02;worldMode='interior';cameraMode='walk';
+      $('#sleepOverlay').classList.remove('visible');$('#sleepOverlay').setAttribute('aria-hidden','true');
+      wakeBlend={fromPos,fromQuaternion,elapsed:0,duration:.85};updateInterface();showToast('AWAKE · CABIN EXPLORATION RESUMED');
+    }
+
+    // Camera rig and input.
+    function resetView() {if(driveState.active){driveState.active=false;driveState.stopRequested=true;}driveInputs.throttle=driveInputs.left=driveInputs.right=driveInputs.brake=false;keys.clear();isSleeping=false;sleepTransition=null;sleepPose=null;wakeBlend=null;$('#sleepOverlay').classList.remove('visible');$('#sleepOverlay').setAttribute('aria-hidden','true');cameraMode='cinematic';worldMode='exterior';started=false;manuallyControlled=false;cinematicTime=0;player.x=0;player.z=10.25;yaw=0;pitch=-.02;orbitTheta=.76;orbitPhi=.28;orbitRadius=40;$('#intro').classList.remove('hidden');closeInfo();$('#settingsDrawer').classList.remove('open');$('#helpOverlay').classList.remove('open');updateInterface();showToast('VIEW RESET · CINEMATIC EXPERIENCE');}
+    function updateCamera(dt) {
+      // The vessel has restrained sea motion; driving rotation remains authoritative.
+      const rootY=.025*Math.sin(time*.68)+.012*Math.sin(time*1.13);
+      shipRoot.position.y=rootY;
+      shipRoot.rotation.y=driveState.heading;
+      shipRoot.rotation.x=.005*Math.sin(time*.72)*(currentPreset==='overcast'?1.35:1.0)+Math.min(.009,Math.abs(driveState.speed)*.0008)*Math.sin(time*1.25);
+      shipRoot.rotation.z=.008*Math.sin(time*.58+1.4)+Math.min(.012,Math.abs(driveState.speed)*.0011)*Math.sin(time*.9);
+      const focus=shipRoot.position;
+      if(cameraMode==='cinematic'){
+        cinematicTime+=dt*(reducedMotion?.18:.30);
+        const a=cinematicTime*.28+.72;const r=40-2.0*Math.sin(cinematicTime*.18);
+        camera.position.set(focus.x+Math.sin(a)*r,focus.y+10.5+1.8*Math.sin(cinematicTime*.25),focus.z+Math.cos(a)*r);camera.lookAt(focus.x,focus.y+1.65,focus.z);
+      } else if(cameraMode==='orbit'){
+        const targetY=focus.y+1.75;const cp=Math.cos(orbitPhi);
+        camera.position.set(focus.x+Math.sin(orbitTheta)*orbitRadius*cp,targetY+Math.sin(orbitPhi)*orbitRadius,focus.z+Math.cos(orbitTheta)*orbitRadius*cp);camera.lookAt(focus.x,focus.y+1.65,focus.z);
+      } else if(cameraMode==='drive'){
+        if(driveState.view==='chase'){
+          const pos=shipRoot.localToWorld(new THREE.Vector3(0,7.2,18.5));
+          const look=shipRoot.localToWorld(new THREE.Vector3(0,1.85,-5.2));camera.position.copy(pos);camera.lookAt(look);
+        } else {
+          const pos=shipRoot.localToWorld(new THREE.Vector3(0,2.28,-4.68));
+          const look=shipRoot.localToWorld(new THREE.Vector3(0,2.12,-22));camera.position.copy(pos);camera.lookAt(look);
+        }
+      } else if(cameraMode==='sleep'){
+        if(sleepTransition){
+          sleepTransition.elapsed=Math.min(sleepTransition.elapsed+dt,sleepTransition.duration);
+          const t=THREE.MathUtils.clamp(sleepTransition.elapsed/sleepTransition.duration,0,1),e=t*t*(3-2*t);
+          camera.position.lerpVectors(sleepTransition.fromPos,sleepTransition.targetPos,e);camera.quaternion.copy(sleepTransition.fromQuat).slerp(sleepTransition.targetQuat,e);
+          if(t>=1)sleepTransition=null;
+        } else if(sleepPose){camera.position.copy(sleepPose.position);camera.quaternion.copy(sleepPose.quaternion);}
+      } else {
+        const floorY=rootY+.98;
+        const localPos=new THREE.Vector3(player.x,floorY+1.62,player.z);
+        const targetPos=shipRoot.localToWorld(localPos);
+        camera.position.copy(targetPos);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw+shipRoot.rotation.y,0,'YXZ');
+        if(wakeBlend){
+          wakeBlend.elapsed=Math.min(wakeBlend.elapsed+dt,wakeBlend.duration);
+          const t=THREE.MathUtils.clamp(wakeBlend.elapsed/wakeBlend.duration,0,1),e=t*t*(3-2*t);
+          camera.position.lerpVectors(wakeBlend.fromPos,targetPos,e);const targetQuaternion=camera.quaternion.clone();camera.quaternion.copy(wakeBlend.fromQuaternion).slerp(targetQuaternion,e);
+          if(t>=1)wakeBlend=null;
+        }
+      }
+    }
+    function updateMovement(dt) {
+      if(cameraMode!=='walk')return;
+      let f=0,s=0;if(keys.has('KeyW')||keys.has('ArrowUp'))f+=1;if(keys.has('KeyS')||keys.has('ArrowDown'))f-=1;if(keys.has('KeyD')||keys.has('ArrowRight'))s+=1;if(keys.has('KeyA')||keys.has('ArrowLeft'))s-=1;
+      if(f||s){const length=Math.hypot(f,s);f/=length;s/=length;const speed=player.speed*(keys.has('ShiftLeft')?1.4:1)*dt;const dx=(Math.sin(yaw)*f+Math.cos(yaw)*s)*speed;const dz=(-Math.cos(yaw)*f+Math.sin(yaw)*s)*speed;tryMove(player.x+dx,player.z+dz);}
+    }
+    function resize() {const w=Math.max(1,window.innerWidth),h=Math.max(1,window.innerHeight);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);}
+    window.addEventListener('resize',resize,{passive:true});
+    canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();showFatal('The browser lost the WebGL context. Reload the page to recreate the scene; this build does not attempt an unsafe partial recovery.');});
+    document.addEventListener('keydown',e=>{
+      if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)||document.activeElement?.isContentEditable)return;
+      if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)&&(cameraMode==='walk'||cameraMode==='drive'))e.preventDefault();
+      if(cameraMode==='sleep'&&(e.code==='KeyE'||e.code==='Escape'||e.code==='Space')){e.preventDefault();wakeUp();return;}
+      keys.add(e.code);
+      if(cameraMode==='drive'&&!e.repeat){if(/^Digit[1-5]$/.test(e.code))selectGear(e.code.slice(-1));else if(e.code==='KeyR')selectGear('R');else if(e.code==='KeyN')selectGear('N');else if(e.code==='KeyC')switchDriveCamera();else if(e.code==='Space')engageStop();}
+      if(e.code==='KeyE'&&!e.repeat&&cameraMode==='walk')interact();
+      if(e.code==='Escape'&&document.pointerLockElement===canvas){document.exitPointerLock?.();}
+      if(e.code==='KeyF'&&!e.repeat){toggleFullscreen();}
+    });
+    document.addEventListener('keyup',e=>{keys.delete(e.code);});
+    window.addEventListener('blur',()=>{keys.clear();driveInputs.throttle=driveInputs.left=driveInputs.right=driveInputs.brake=false;if(driveState.active)driveState.stopRequested=true;});
+    canvas.addEventListener('click',()=>{if(cameraMode==='walk'&&!isTouchDevice&&!document.pointerLockElement&&canvas.requestPointerLock){canvas.requestPointerLock();manuallyControlled=true;}});
+    document.addEventListener('mousemove',e=>{if(cameraMode==='walk'&&document.pointerLockElement===canvas){yaw-=e.movementX*.0022;pitch=THREE.MathUtils.clamp(pitch-e.movementY*.0019,-1.15,1.15);}else if(cameraMode==='orbit'&&lastPointer){const dx=e.clientX-lastPointer.x,dy=e.clientY-lastPointer.y;orbitTheta-=dx*.006;orbitPhi=THREE.MathUtils.clamp(orbitPhi+dy*.004,.08,1.1);lastPointer={x:e.clientX,y:e.clientY};}});
+    canvas.addEventListener('pointerdown',e=>{
+      if(cameraMode==='walk'&&e.pointerType==='touch'){touchPointerId=e.pointerId;lastPointer={x:e.clientX,y:e.clientY};canvas.setPointerCapture?.(e.pointerId);}
+      else if(cameraMode==='orbit'&&e.button===0){lastPointer={x:e.clientX,y:e.clientY};canvas.setPointerCapture?.(e.pointerId);}
+    });
+    canvas.addEventListener('pointermove',e=>{
+      if(cameraMode==='walk'&&e.pointerType==='touch'&&touchPointerId===e.pointerId&&lastPointer){const dx=e.clientX-lastPointer.x,dy=e.clientY-lastPointer.y;yaw-=dx*.006;pitch=THREE.MathUtils.clamp(pitch-dy*.004,-1.15,1.15);lastPointer={x:e.clientX,y:e.clientY};}
+      else if(cameraMode==='orbit'&&e.pointerType!=='mouse'&&lastPointer){const dx=e.clientX-lastPointer.x,dy=e.clientY-lastPointer.y;orbitTheta-=dx*.006;orbitPhi=THREE.MathUtils.clamp(orbitPhi+dy*.004,.08,1.1);lastPointer={x:e.clientX,y:e.clientY};}
+    });
+    function endPointer(e){if(touchPointerId===e.pointerId)touchPointerId=null;lastPointer=null;}
+    canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('lostpointercapture',endPointer);
+    canvas.addEventListener('wheel',e=>{if(cameraMode==='orbit'){e.preventDefault();orbitRadius=THREE.MathUtils.clamp(orbitRadius+e.deltaY*.035,16,72);}},{passive:false});
+    $$('.mobile-pad [data-move]').forEach(b=>{const code={forward:'KeyW',back:'KeyS',left:'KeyA',right:'KeyD'}[b.dataset.move];const down=e=>{e.preventDefault();keys.add(code);};const up=e=>{e.preventDefault();keys.delete(code);};b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointerleave',up);b.addEventListener('pointercancel',up);});
+    $$('[data-drive-hold]').forEach(b=>{
+      const kind=b.dataset.driveHold;const down=e=>{e.preventDefault();if(!driveState.active)return;try{b.setPointerCapture?.(e.pointerId);}catch{}setDriveHold(kind,true);};
+      const up=e=>{if(e)e.preventDefault?.();setDriveHold(kind,false);};
+      b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);
+    });
+    document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&cameraMode==='walk'&&!isTouchDevice)showToast('MOUSE RELEASED · CLICK THE SCENE TO LOOK AGAIN');});
+
+    function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.().catch(()=>showToast('FULLSCREEN IS NOT AVAILABLE IN THIS BROWSER'));else document.exitFullscreen?.();}
+    function action(name) {
+      switch(name){
+        case 'enter':startExterior();break;
+        case 'driveEnter':startDriving();break;
+        case 'driveExit':exitDriving();break;
+        case 'driveCamera':switchDriveCamera();break;
+        case 'wake':wakeUp();break;
+        case 'watch':$('#intro').classList.add('hidden');started=true;switchMode('cinematic');break;
+        case 'cinematic':started=true;$('#intro').classList.add('hidden');switchMode('cinematic');break;
+        case 'orbit':started=true;$('#intro').classList.add('hidden');switchMode('orbit');break;
+        case 'walkExterior':if(driveState.active)exitDriving(false);started=true;$('#intro').classList.add('hidden');if(worldMode==='interior'){worldMode='exterior';player.x=0;player.z=10.25;}switchMode('walk');break;
+        case 'interior':started=true;$('#intro').classList.add('hidden');enterRoom('lounge',false);break;
+        case 'settings':$('#settingsDrawer').classList.toggle('open');$('#settingsDrawer').setAttribute('aria-hidden',String(!$('#settingsDrawer').classList.contains('open')));break;
+        case 'sound':toggleSound();break;
+        case 'help':$('#helpOverlay').classList.toggle('open');break;
+        case 'reset':resetView();break;
+        case 'fullscreen':toggleFullscreen();break;
+        case 'interact':interact();break;
+        case 'returnDeck':worldMode='exterior';cameraMode='walk';player.x=0;player.z=10.25;yaw=0;pitch=-.02;updateInterface();showToast('RETURNED TO THE AFT DECK');break;
+        case 'closeInfo':closeInfo();break;
+        case 'about':showInfo('A procedural maritime study','INFINITE OCEAN is an original conceptual environment by Shaurya Mittal. It combines a procedurally assembled marine vessel, custom hull and furnishing details, procedural material relief, a multi-frequency shader ocean, environment presets, camera modes and a navigable interior. It is a browser-based visualization—not a commissioned vessel, a scanned asset or a full fluid simulation.','ABOUT THE EXPERIENCE',true);break;
+      }
+    }
+    document.addEventListener('click',e=>{
+      const b=e.target.closest('[data-action]');if(b){e.preventDefault();action(b.dataset.action);return;}
+      const gearButton=e.target.closest('[data-gear]');if(gearButton){e.preventDefault();if(driveState.active)selectGear(gearButton.dataset.gear);return;}
+      const driveAction=e.target.closest('[data-drive-action]');if(driveAction){e.preventDefault();if(driveAction.dataset.driveAction==='stop')engageStop();return;}
+      const env=e.target.closest('[data-env]');if(env){applyEnvironment(env.dataset.env);return;}
+      const q=e.target.closest('[data-quality]');if(q){applyQuality(q.dataset.quality);return;}
+      const r=e.target.closest('[data-room]');if(r){teleportRoom(r.dataset.room);return;}
+      const m=e.target.closest('[data-motion]');if(m){reducedMotion=m.dataset.motion==='reduced';$$('[data-motion]').forEach(x=>x.classList.toggle('active',x===m));showToast(reducedMotion?'REDUCED MOTION ENABLED':'CINEMATIC MOTION ENABLED');return;}
+    });
+    $('#brandHome').addEventListener('click',e=>{e.preventDefault();resetView();});
+    reducedMotionQuery.addEventListener?.('change',e=>{if(e.matches)reducedMotion=true;});
+
+    // Animate the transition between scene presets; expensive map generation happens only on selection.
+    function updateTransition(now) {
+      if(!transition)return;const t=THREE.MathUtils.clamp((now-transition.start)/transition.duration,0,1),s=t*t*(3-2*t),f=transition.from,to=transition.to;
+      const mixC=(a,b)=>a.clone().lerp(b,s);
+      const mixN=(a,b)=>new THREE.Vector3().copy(a).lerp(b,s).normalize();
+      applyTarget({sunColor:mixC(f.sunColor,to.sunColor),waterColor:mixC(f.waterColor,to.waterColor),skyTop:mixC(f.skyTop,to.skyTop),horizon:mixC(f.horizon,to.horizon),sunDir:mixN(f.sunDir,to.sunDir),hemiSky:mixC(f.hemiSky,to.hemiSky),hemiGround:mixC(f.hemiGround,to.hemiGround),fog:mixC(f.fog,to.fog),sunIntensity:THREE.MathUtils.lerp(f.sunIntensity,to.sunIntensity,s),hemiIntensity:THREE.MathUtils.lerp(f.hemiIntensity,to.hemiIntensity,s),exposure:THREE.MathUtils.lerp(f.exposure,to.exposure,s),envIntensity:THREE.MathUtils.lerp(f.envIntensity,to.envIntensity,s),wind:THREE.MathUtils.lerp(f.wind,to.wind,s),cloud:THREE.MathUtils.lerp(f.cloud,to.cloud,s)});
+      if(t>=1){scene.environmentIntensity=to.envIntensity;transition=null;}
+    }
+    // Intro starts only after the renderer and scene are ready; no fabricated loading percentages.
+    resize();updateInterface();updateSoundUI();
+    loadStatus.textContent='SCENE READY · WAITING FOR INPUT';
+    requestAnimationFrame(()=>{loading.classList.add('is-hidden');$('#intro').classList.remove('hidden');});
+
+    let lastFpsWrite=0;
+    function animate(now) {
+      if(!renderer.getContext().isContextLost()){
+        const dt=Math.min(clock.getDelta(),.05);time+=dt;frameCount++;fpsClock+=dt;
+        if(document.hidden){requestAnimationFrame(animate);return;}
+        updateTransition(now);updateDrive(dt);updateMovement(dt);updateCamera(dt);
+        waterUniforms.uTime.value=time;waterUniforms.uBoatPos.value.set(shipRoot.position.x,0,shipRoot.position.z);waterUniforms.uBoatHeading.value=shipRoot.rotation.y;waterUniforms.uBoatSpeed.value=driveState.speed;
+        sunLight.target.position.set(shipRoot.position.x,shipRoot.position.y,shipRoot.position.z);sunLight.position.copy(shipRoot.position).addScaledVector(waterUniforms.uSunDir.value,100);
+        if(cameraMode==='walk')setRoomHud();
+        if(fpsClock>=.65){currentFps=Math.round(frameCount/fpsClock);frameCount=0;fpsClock=0;if(now-lastFpsWrite>550){$('#fpsReadout').textContent=`${currentFps} FPS SAMPLE · WEBGL`;lastFpsWrite=now;}}
+        renderer.render(scene,camera);
+      }
+      requestAnimationFrame(animate);
+    }
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)clock.getDelta();else{keys.clear();driveInputs.throttle=driveInputs.left=driveInputs.right=driveInputs.brake=false;if(driveState.active)driveState.stopRequested=true;}});
+    requestAnimationFrame(animate);
+
+    return {renderer,scene,camera,dispose(){window.removeEventListener('resize',resize);renderer.dispose();objectsToDispose.forEach(o=>o.dispose?.());audioSources.forEach(s=>{try{s.stop();}catch{}});audioContext?.close();}};
+  }
+})();
+</script>
+</body>
+</html>
